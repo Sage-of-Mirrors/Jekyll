@@ -1,0 +1,10 @@
+{
+    "name" : "jekyll",
+    "version-string" : "jekyll-win",
+    "dependencies": [
+        "zlib",
+        "libpng",
+        "freeglut",
+        "glfw3"
+    ]
+}

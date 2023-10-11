@@ -1,0 +1,13 @@
+[submodule "lib/imgui"]
+	path = lib/imgui
+	url = git@github.com:ocornut/imgui.git
+	branch = docking
+[submodule "lib/J3DUltra"]
+	path = lib/J3DUltra
+	url = git@github.com:Sage-of-Mirrors/J3DUltra.git
+[submodule "lib/bstream"]
+	path = lib/bstream
+	url = git@github.com:Astral-C/bStream.git
+[submodule "lib/glm"]
+	path = lib/glm
+	url = git@github.com:g-truc/glm.git
