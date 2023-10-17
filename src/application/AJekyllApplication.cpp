@@ -59,8 +59,8 @@ bool AJekyllApplication::Setup() {
 
 	// Initialize imgui
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
 
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
@@ -128,10 +128,21 @@ bool AJekyllApplication::Execute(float deltaTime) {
 
 	// Render viewer context
 	mContext->Render(deltaTime);
-	
+
 	// Render imgui
 	ImGui::Render();
+
+	mContext->PostRender(deltaTime);
+
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		GLFWwindow* backup_current_context = glfwGetCurrentContext();
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+		glfwMakeContextCurrent(backup_current_context);
+	}
 
 	// Swap buffers
 	glfwSwapBuffers(mWindow);

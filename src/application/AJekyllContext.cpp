@@ -1,4 +1,5 @@
 #include "application/AJekyllContext.hpp"
+#include "application/AJ3DContext.hpp"
 
 #include "model/MScenegraph.hpp"
 
@@ -9,7 +10,7 @@
 
 
 AJekyllContext::AJekyllContext() : bIsDockingConfigured(false), mMainDockSpaceID(UINT32_MAX), mDockNodeTopID(UINT32_MAX),
-	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX), mScenegraph(nullptr)
+	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX), mScenegraph(nullptr), mJ3DContext(nullptr)
 {
 
 }
@@ -48,11 +49,16 @@ void AJekyllContext::RenderMenuBar() {
 
 	if (ImGui::BeginMenu("File")) {
 		if (ImGui::MenuItem("Open...")) {
-			bStream::CFileStream test = bStream::CFileStream("D:\\SZS Tools\\cl_real.bdl", bStream::Big, bStream::In);
+			bStream::CFileStream test = bStream::CFileStream("D:\\SZS Tools\\sms\\Bianco 1\\map\\map\\map.bmd", bStream::Big, bStream::In);
 			test.seek(0x20);
 			
 			mScenegraph = new MScenegraph();
 			mScenegraph->LoadScenegraphNodes(test);
+
+			test.seek(0);
+
+			mJ3DContext = new AJ3DContext();
+			mJ3DContext->LoadModel(test);
 
 			//OpenModelCB();
 		}
@@ -85,7 +91,19 @@ void AJekyllContext::Render(float deltaTime) {
     mScenePanel.Render(mScenegraph);
 	mPropertiesPanel.Render();
 
+	if (mJ3DContext != nullptr) {
+		mViewport.Render(deltaTime);
+		mViewport2.Render(deltaTime);
+	}
+
 	ImGui::PopStyleColor();
+}
+
+void AJekyllContext::PostRender(float deltaTime) {
+	if (mJ3DContext != nullptr) {
+		mViewport.PostRender(mJ3DContext, deltaTime);
+		mViewport2.PostRender(mJ3DContext, deltaTime);
+	}
 }
 
 void AJekyllContext::OnFileDropped(std::string fileName) {

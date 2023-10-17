@@ -2,18 +2,22 @@
 
 #include "ui/UScenePanel.hpp"
 #include "ui/UPropertiesPanel.hpp"
+#include "ui/UViewport.hpp"
 
 #include <cstdint>
 #include <string>
 
 
 class MScenegraph;
+class AJ3DContext;
 
 class AJekyllContext {
     /* Panels */
 
     UScenePanel mScenePanel;
     UPropertiesPanel mPropertiesPanel;
+    UViewport mViewport;
+    UViewport mViewport2;
     
     /* Docking */
     bool bIsDockingConfigured;
@@ -26,6 +30,7 @@ class AJekyllContext {
 
     /* Data */
     MScenegraph* mScenegraph;
+    AJ3DContext* mJ3DContext;
 
     void SetUpDocking();
 
@@ -37,6 +42,7 @@ public:
 
     void Update(float deltaTime);
     void Render(float deltaTime);
+    void PostRender(float deltaTime);
 
     void OnFileDropped(std::string fileName);
 };
