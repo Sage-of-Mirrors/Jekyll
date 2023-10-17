@@ -1,11 +1,15 @@
 #include "application/AJekyllContext.hpp"
 
+#include "model/MScenegraph.hpp"
+
+#include <bstream.h>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
 
-AJekyllContext::AJekyllContext() : bIsDockingConfigured(false), mMainDockSpaceID(UINT32_MAX), mDockNodeTopID(UINT32_MAX), 
-	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX)
+AJekyllContext::AJekyllContext() : bIsDockingConfigured(false), mMainDockSpaceID(UINT32_MAX), mDockNodeTopID(UINT32_MAX),
+	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX), mScenegraph(nullptr)
 {
 
 }
@@ -44,6 +48,12 @@ void AJekyllContext::RenderMenuBar() {
 
 	if (ImGui::BeginMenu("File")) {
 		if (ImGui::MenuItem("Open...")) {
+			bStream::CFileStream test = bStream::CFileStream("D:\\SZS Tools\\cl_real.bdl", bStream::Big, bStream::In);
+			test.seek(0x20);
+			
+			mScenegraph = new MScenegraph();
+			mScenegraph->LoadScenegraphNodes(test);
+
 			//OpenModelCB();
 		}
 		if (ImGui::MenuItem("Save...")) {
@@ -72,7 +82,7 @@ void AJekyllContext::Render(float deltaTime) {
 
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.15f, 0.15f, 0.15f, 1.0f });
 
-    mScenePanel.Render();
+    mScenePanel.Render(mScenegraph);
 	mPropertiesPanel.Render();
 
 	ImGui::PopStyleColor();

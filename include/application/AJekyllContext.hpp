@@ -7,6 +7,8 @@
 #include <string>
 
 
+class MScenegraph;
+
 class AJekyllContext {
     /* Panels */
 
@@ -21,6 +23,9 @@ class AJekyllContext {
     uint32_t mDockNodeRightID;
     uint32_t mDockNodeDownID;
     uint32_t mDockNodeLeftID;
+
+    /* Data */
+    MScenegraph* mScenegraph;
 
     void SetUpDocking();
 

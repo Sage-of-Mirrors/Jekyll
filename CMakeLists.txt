@@ -13,6 +13,8 @@ file(GLOB JEKYLL_SRC
     "include/*.hpp"
     "src/application/*.cpp"
     "include/application/*.hpp"
+    "src/model/*.cpp"
+    "include/model/*.hpp"
     "src/ui/*.cpp"
     "include/ui/*.hpp"
     
