@@ -7,6 +7,8 @@
 #include <vector>
 
 
+struct MJoint;
+
 namespace bStream {
     class CStream;
     class CMemoryStream;
@@ -53,12 +55,16 @@ public:
         mChildren.clear();
     }
 
+    uint32_t GetJointIndex() const { return mJointIdx; }
+
     /* Flattens the given MSerializedNode's children into material/shape pairs and child joint MScenegraphNodes. */
     void ProcessSerializedNodes(MSerializedNode* jntNode);
     void ProcessSerializedNodes_Recursive(MSerializedNode* node);
 
     /* Renders this node onto the scenegraph window. */
     void RenderUI_Recursive(const J3DNameTable* jntNames, const J3DNameTable* matNames, int level) const;
+
+    void SetupJointHierarchy_Recursive(std::vector<MJoint*>& joints) const;
 };
 
 class MScenegraph {
@@ -77,7 +83,7 @@ public:
     MScenegraph();
     ~MScenegraph();
 
-    void LoadScenegraphNodes(bStream::CStream& stream);
+    void LoadScenegraphData(bStream::CStream& stream);
     void SetMatrixType(uint16_t type);
 
     void SaveScenegraph(bStream::CStream& stream);

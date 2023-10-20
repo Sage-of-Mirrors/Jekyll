@@ -16,7 +16,7 @@
 #include <vector>
 
 
-std::vector<std::string> DroppedFiles;
+AJekyllContext* JekyllContext = nullptr;
 
 void DealWithGLErrors(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char* message, const void* userParam) {
 	std::cout << "GL CALLBACK: " << message << std::endl;
@@ -68,6 +68,7 @@ bool AJekyllApplication::Setup() {
 
 	// Create viewer context
 	mContext = new AJekyllContext();
+	JekyllContext = mContext;
 
 	return true;
 }
@@ -97,14 +98,9 @@ bool AJekyllApplication::Execute(float deltaTime) {
 
 	// Update window title, will probably be removed at some point
 	char titleBuffer[32];
-	snprintf(titleBuffer, 31, "Jekyll (%.2f fps)", CLOCKS_PER_SEC / deltaTime);
+	snprintf(titleBuffer, 31, "Jekyll (%.2f fps)", (CLOCKS_PER_SEC / 1000) / deltaTime);
 	titleBuffer[31] = 0;
 	glfwSetWindowTitle(mWindow, titleBuffer);
-	
-	if (DroppedFiles.size() != 0) {
-		mContext->OnFileDropped(DroppedFiles[0]);
-		DroppedFiles.clear();
-	}
 
 	// Begin actual rendering
 	glfwMakeContextCurrent(mWindow);
@@ -151,7 +147,9 @@ bool AJekyllApplication::Execute(float deltaTime) {
 }
 
 void GLFWDropCallback(GLFWwindow* window, int count, const char* paths[]) {
-	for (int i = 0; i < count; i++) {
-		DroppedFiles.push_back(std::string(paths[i]));
+	if (JekyllContext == nullptr || count <= 0) {
+		return;
 	}
+
+	JekyllContext->OnFileDropped(paths[0]);
 }

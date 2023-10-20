@@ -50,6 +50,8 @@ void SortFuncTest(J3DRendering::SortFunctionArgs packets) {
 }
 
 void AJ3DContext::LoadModel(bStream::CStream& stream) {
+	stream.seek(0);
+
     J3DModelLoader loader;
     
     mModelData = loader.Load(&stream, 0);

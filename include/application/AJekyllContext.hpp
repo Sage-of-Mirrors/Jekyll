@@ -3,21 +3,34 @@
 #include "ui/UScenePanel.hpp"
 #include "ui/UPropertiesPanel.hpp"
 #include "ui/UViewport.hpp"
+#include "ui/ULightsPanel.hpp"
+
+#include "model/MMiscModelData.hpp"
 
 #include <cstdint>
 #include <string>
+#include <vector>
+#include <filesystem>
 
 
 class MScenegraph;
+class MJointData;
 class AJ3DContext;
+
+namespace bStream {
+    class CStream;
+}
 
 class AJekyllContext {
     /* Panels */
 
     UScenePanel mScenePanel;
     UPropertiesPanel mPropertiesPanel;
-    UViewport mViewport;
-    UViewport mViewport2;
+    
+    ULightsPanel* mLightsPanel;
+
+    UViewport* mMainViewport;
+    std::vector<UViewport*> mOtherViewports;
     
     /* Docking */
     bool bIsDockingConfigured;
@@ -29,12 +42,19 @@ class AJekyllContext {
     uint32_t mDockNodeLeftID;
 
     /* Data */
+    MMiscModelData mMiscModelData;
     MScenegraph* mScenegraph;
+    MJointData* mJointData;
+
     AJ3DContext* mJ3DContext;
 
     void SetUpDocking();
 
     void RenderMenuBar();
+
+    void OpenModelCB();
+    void LoadModel(std::filesystem::path filePath);
+    void LoadSections(bStream::CStream& stream);
 
 public:
     AJekyllContext();
@@ -44,5 +64,5 @@ public:
     void Render(float deltaTime);
     void PostRender(float deltaTime);
 
-    void OnFileDropped(std::string fileName);
+    void OnFileDropped(std::filesystem::path filePath);
 };

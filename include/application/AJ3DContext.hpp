@@ -23,6 +23,8 @@ public:
     AJ3DContext() { }
     ~AJ3DContext() { }
 
+    J3DLight* GetLights() { return mLights; }
+
     void LoadModel(bStream::CStream& stream);
 
     void Render(ASceneCamera& camera, float deltaTime);

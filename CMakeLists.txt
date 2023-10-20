@@ -23,9 +23,12 @@ file(GLOB JEKYLL_SRC
     
     # glad
     "lib/glad/src/*.c"
+
+    # ImGuiFileDialog
+    "lib/ImGuiFileDialog/ImGuiFileDialog.cpp"
 )
 
 add_executable(jekyll ${JEKYLL_SRC})
 
-target_include_directories(jekyll PUBLIC include lib/glad/include lib/bStream lib/glm)
+target_include_directories(jekyll PUBLIC include lib/glad/include lib/bStream lib/glm lib/ImGuiFileDialog)
 target_link_libraries(jekyll PUBLIC glm j3dultra imgui glfw)

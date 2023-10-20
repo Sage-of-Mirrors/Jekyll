@@ -1,4 +1,5 @@
 #include "model/MScenegraph.hpp"
+#include "model/MJointData.hpp"
 
 #include <bstream.h>
 #include <imgui.h>
@@ -9,7 +10,7 @@
 
 constexpr size_t SIZE_OFFSET = 0x04;
 constexpr size_t FLAGS_OFFSET = 0x08;
-constexpr size_t HIERARCHY_OFFSET_OFFSET = 0x14;
+constexpr size_t HIERARCHY_OFFSET = 0x14;
 
 constexpr uint16_t NODE_ID_NONE = 0x00;
 constexpr uint16_t NODE_ID_DOWN = 0x01;
@@ -103,10 +104,10 @@ MSerializedNode* MScenegraph::LoadSerializedNodes(bStream::CStream& stream) {
     return curParent;
 }
 
-void MScenegraph::LoadScenegraphNodes(bStream::CStream& stream) {
+void MScenegraph::LoadScenegraphData(bStream::CStream& stream) {
     size_t curPos = LoadData(stream);
 
-    size_t hierarchyOffset = stream.peekUInt32(curPos + HIERARCHY_OFFSET_OFFSET);
+    size_t hierarchyOffset = stream.peekUInt32(curPos + HIERARCHY_OFFSET);
     stream.seek(curPos + hierarchyOffset);
 
     MSerializedNode* serializedRoot = LoadSerializedNodes(stream);
@@ -115,6 +116,8 @@ void MScenegraph::LoadScenegraphNodes(bStream::CStream& stream) {
     mRoot->ProcessSerializedNodes(serializedRoot);
 
     delete serializedRoot;
+
+    stream.seek(curPos + mSize);
 }
 
 void MScenegraph::SetMatrixType(uint16_t type) {
@@ -179,6 +182,11 @@ void MScenegraphNode::ProcessSerializedNodes_Recursive(MSerializedNode* node) {
 void MScenegraphNode::RenderUI_Recursive(const J3DNameTable* jntNames, const J3DNameTable* matNames, int level) const {
     std::string nodeId = "##jnt" + std::to_string(mJointIdx);
 
+    if (mChildren.size() == 0) {
+        ImGui::Text("Joint %i", mJointIdx);
+        return;
+    }
+
     if (ImGui::TreeNode(nodeId.c_str(), "Joint %i", mJointIdx)) {
         ImGui::Indent(TREE_INDENT * level);
 
@@ -192,5 +200,20 @@ void MScenegraphNode::RenderUI_Recursive(const J3DNameTable* jntNames, const J3D
 
         ImGui::Unindent(TREE_INDENT * level);
         ImGui::TreePop();
+    }
+}
+
+void MScenegraphNode::SetupJointHierarchy_Recursive(std::vector<MJoint*>& joints) const {
+    if (mParent == nullptr) {
+        joints[mJointIdx]->mParent = nullptr;
+    }
+    else {
+        joints[mJointIdx]->mParent = joints[mParent->mJointIdx];
+    }
+
+    for (MScenegraphNode* child : mChildren) {
+        joints[mJointIdx]->mChildren.push_back(joints[child->mJointIdx]);
+
+        child->SetupJointHierarchy_Recursive(joints);
     }
 }

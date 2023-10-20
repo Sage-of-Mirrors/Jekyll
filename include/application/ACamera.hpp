@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <imgui.h>
+
 struct GLFWwindow;
 
 constexpr glm::vec3 ZERO = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -31,7 +33,9 @@ class ASceneCamera {
 	float mMoveSpeed;
 	float mMouseSensitivity;
 
-	void Rotate(float deltaTime, glm::vec2 mouseDelta);
+	ImVec2 mLastMouseDelta;
+
+	void Rotate(float deltaTime, float sensitivity, ImVec2 mouseDelta);
 
 public:
 	ASceneCamera();

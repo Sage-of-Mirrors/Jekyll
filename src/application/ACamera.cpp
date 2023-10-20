@@ -1,8 +1,10 @@
 #include "application/ACamera.hpp"
 #include "application/AInput.hpp"
 
+#include <imgui.h>
+
 #include <algorithm>
-#include <GLFW/glfw3.h>
+
 
 ASceneCamera::ASceneCamera() : mNearPlane(1.0f), mFarPlane(1000000.f), mFovy(glm::radians(60.f)),
     mCenter(ZERO), mEye(ZERO), mPitch(0.f), mYaw(glm::half_pi<float>()), mUp(UNIT_Y), mRight(UNIT_X), mForward(UNIT_Z),
@@ -14,26 +16,33 @@ ASceneCamera::ASceneCamera() : mNearPlane(1.0f), mFarPlane(1000000.f), mFovy(glm
 void ASceneCamera::Update(float deltaTime) {
 	glm::vec3 moveDir = glm::zero<glm::vec3>();
 
-	if (AInput::GetKey(GLFW_KEY_W))
+	if (ImGui::IsKeyDown(ImGuiKey_W)) // Forward
 		moveDir -= mForward;
-	if (AInput::GetKey(GLFW_KEY_S))
+	if (ImGui::IsKeyDown(ImGuiKey_S)) // Backward
 		moveDir += mForward;
-	if (AInput::GetKey(GLFW_KEY_D))
+	if (ImGui::IsKeyDown(ImGuiKey_D)) // Right
 		moveDir -= mRight;
-	if (AInput::GetKey(GLFW_KEY_A))
+	if (ImGui::IsKeyDown(ImGuiKey_A)) // Left
 		moveDir += mRight;
 
-	if (AInput::GetKey(GLFW_KEY_Q))
+	if (ImGui::IsKeyDown(ImGuiKey_Q)) // Up
 		moveDir -= UNIT_Y;
-	if (AInput::GetKey(GLFW_KEY_E))
+	if (ImGui::IsKeyDown(ImGuiKey_E)) // Down
 		moveDir += UNIT_Y;
 
-	mMoveSpeed += AInput::GetMouseScrollDelta() * 100 * deltaTime;
+	mMoveSpeed += ImGui::GetIO().MouseWheel * 10000 * deltaTime;
 	mMoveSpeed = std::clamp(mMoveSpeed, 100.f, 50000.f);
-	float actualMoveSpeed = AInput::GetKey(GLFW_KEY_LEFT_SHIFT) ? mMoveSpeed * 10.f : mMoveSpeed;
+	float actualMoveSpeed = ImGui::IsKeyDown(ImGuiKey_LeftShift) ? mMoveSpeed * 10.f : mMoveSpeed;
 
-	if (AInput::GetMouseButton(GLFW_MOUSE_BUTTON_RIGHT))
-		Rotate(deltaTime, AInput::GetMouseDelta());
+	// Step-wise rotation
+	if (ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+		Rotate(deltaTime, 0.25f, ImGui::GetMouseDragDelta(ImGuiMouseButton_Right));
+		ImGui::ResetMouseDragDelta(ImGuiMouseButton_Right);
+	}
+	// Smooth rotation
+	else if (ImGui::IsMouseDown(ImGuiMouseButton_Middle)) {
+		Rotate(deltaTime, 0.05f, ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle));
+	}
 
 	if (glm::length(moveDir) != 0.f)
 		moveDir = glm::normalize(moveDir);
@@ -42,12 +51,12 @@ void ASceneCamera::Update(float deltaTime) {
 	mCenter = mEye - mForward;
 }
 
-void ASceneCamera::Rotate(float deltaTime, glm::vec2 mouseDelta) {
+void ASceneCamera::Rotate(float deltaTime, float sensitivity, ImVec2 mouseDelta) {
 	if (mouseDelta.x == 0.f && mouseDelta.y == 0.f)
 		return;
 
-	mPitch += mouseDelta.y * deltaTime * mMouseSensitivity;
-	mYaw += mouseDelta.x * deltaTime * mMouseSensitivity;
+	mPitch += mouseDelta.y * deltaTime * sensitivity;
+	mYaw += mouseDelta.x * deltaTime * sensitivity;
 
 	mPitch = std::clamp(mPitch, LOOK_UP_MIN, LOOK_UP_MAX);
 
