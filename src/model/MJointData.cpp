@@ -12,7 +12,7 @@ constexpr size_t JNT_COUNT_OFFSET = 0x08;
 constexpr size_t JNT_DATA_OFFSET = 0x0C;
 constexpr size_t NAME_TABLE_OFFSET = 0x14;
 
-MJointData::MJointData() : mRoot(nullptr), mSize(0), mData(nullptr) {
+MJointData::MJointData() : mRoot(nullptr), mSize(0), mData(nullptr), mJointDataOffset(0) {
 
 }
 
@@ -25,7 +25,9 @@ MJointData::~MJointData() {
     mRoot = nullptr;
 
     mSize = 0;
+
     delete[] mData;
+    mData = nullptr;
 }
 
 void MJointData::LoadJointData(bStream::CStream& stream, const MScenegraphNode* sceneRoot) {
@@ -60,9 +62,9 @@ void MJointData::ReadJoints() {
 
     // Read joints
     uint16_t jntCount = dataStrm.peekUInt16(JNT_COUNT_OFFSET);
-    uint32_t jntDataOffset = dataStrm.peekUInt32(JNT_DATA_OFFSET);
+    mJointDataOffset = dataStrm.peekUInt32(JNT_DATA_OFFSET);
 
-    dataStrm.seek(jntDataOffset);
+    dataStrm.seek(mJointDataOffset);
 
     for (uint32_t i = 0; i < jntCount; i++) {
         MJoint* newJnt = new MJoint();
@@ -105,10 +107,7 @@ void MJointData::SaveJointData(bStream::CStream& stream) {
     stream.writeBytes(mData, mSize);
     size_t endPos = stream.tell();
 
-    stream.seek(curPos);
-
-    uint32_t jntDataOffset = stream.peekUInt16(JNT_DATA_OFFSET);
-    stream.seek(curPos + jntDataOffset);
+    stream.seek(curPos + mJointDataOffset);
 
     for (MJoint* jnt : mJoints) {
         uint16_t flags = jnt->mKind;

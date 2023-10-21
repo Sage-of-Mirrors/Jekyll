@@ -12,7 +12,6 @@ class MScenegraphNode;
 
 namespace bStream {
     class CStream;
-    class CMemoryStream;
 }
 
 enum class EJointMatrixType : uint8_t {
@@ -47,6 +46,8 @@ class MJointData {
 
     uint32_t mSize;
     uint8_t* mData;
+
+    size_t mJointDataOffset;
 
     void ReadJoints();
 

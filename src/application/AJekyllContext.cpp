@@ -1,8 +1,9 @@
 #include "application/AJekyllContext.hpp"
 #include "application/AJ3DContext.hpp"
-#include "model/MJointData.hpp"
 
 #include "model/MScenegraph.hpp"
+#include "model/MJointData.hpp"
+#include "model/MShapeData.hpp"
 
 #include <bstream.h>
 
@@ -66,7 +67,7 @@ void AJekyllContext::RenderMenuBar() {
 			OpenModelCB();
 		}
 		if (ImGui::MenuItem("Save...")) {
-			//SaveModelCB();
+			SaveModelCB();
 		}
 
 		ImGui::Separator();
@@ -136,6 +137,15 @@ void AJekyllContext::Render(float deltaTime) {
 
 		ImGuiFileDialog::Instance()->Close();
 	}
+
+	// Render save file dialog
+	if (ImGuiFileDialog::Instance()->Display("saveModelDialog")) {
+		if (ImGuiFileDialog::Instance()->IsOk()) {
+			SaveModel(ImGuiFileDialog::Instance()->GetFilePathName());
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
 }
 
 void AJekyllContext::PostRender(float deltaTime) {
@@ -149,7 +159,7 @@ void AJekyllContext::PostRender(float deltaTime) {
 }
 
 void AJekyllContext::OpenModelCB() {
-	ImGuiFileDialog::Instance()->OpenDialog("loadModelDialog", "Choose Model File", "J3D Models{.bmd,.bdl}", ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
+	ImGuiFileDialog::Instance()->OpenDialog("loadModelDialog", "Open Model File", "J3D Models{.bmd,.bdl}", ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
 }
 
 void AJekyllContext::LoadModel(std::filesystem::path filePath) {
@@ -203,6 +213,13 @@ void AJekyllContext::LoadSections(bStream::CStream& stream) {
 
 				break;
 			}
+			case 0x53485031:
+			{
+				mShapeData = new MShapeData();
+				mShapeData->LoadShapeData(stream);
+
+				break;
+			}
 			default:
 			{
 				uint32_t sectionSize = stream.peekUInt32(stream.tell() + 4);
@@ -215,6 +232,75 @@ void AJekyllContext::LoadSections(bStream::CStream& stream) {
 			}
 		}
 	}
+}
+
+void AJekyllContext::SaveModelCB() {
+	ImGuiFileDialog::Instance()->OpenDialog("saveModelDialog", "Save Model File", ".bmd,.bdl", ".", 1, nullptr,
+		ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
+}
+
+void AJekyllContext::SaveModel(std::filesystem::path filePath) {
+	bool bGenerateMdl3 = false;
+
+	if (filePath.extension() == ".bdl") {
+		bGenerateMdl3 = true;
+	}
+
+	bStream::CFileStream stream(filePath.generic_string(), bStream::Big, bStream::Out);
+
+	uint32_t sectionSize = 0;
+	uint8_t* sectionData = nullptr;
+
+	// Write header
+	stream.writeBytes(mMiscModelData.GetHeader(), 0x20);
+
+	mScenegraph->SaveScenegraph(stream);
+
+	// Write VTX1
+	mMiscModelData.GetSection(0x56545831, sectionSize, sectionData);
+	stream.writeBytes(sectionData, sectionSize);
+
+	// Write EVP1
+	mMiscModelData.GetSection(0x45565031, sectionSize, sectionData);
+	stream.writeBytes(sectionData, sectionSize);
+
+	// Write DRW1
+	mMiscModelData.GetSection(0x44525731, sectionSize, sectionData);
+	stream.writeBytes(sectionData, sectionSize);
+
+	mJointData->SaveJointData(stream);
+	mShapeData->SaveShapeData(stream);
+
+	// TEMPORARY: Write MAT3
+	mMiscModelData.GetSection(0x4D415433, sectionSize, sectionData);
+	stream.writeBytes(sectionData, sectionSize);
+
+	if (bGenerateMdl3) {
+		// TEMPORARY: Write MDL3
+		mMiscModelData.GetSection(0x4D444C33, sectionSize, sectionData);
+		stream.writeBytes(sectionData, sectionSize);
+	}
+
+	// TEMPORARY: Write TEX1
+	mMiscModelData.GetSection(0x54455831, sectionSize, sectionData);
+	stream.writeBytes(sectionData, sectionSize);
+
+	size_t finalSize = stream.tell();
+	stream.seek(0x04);
+
+	if (bGenerateMdl3) {
+		stream.writeUInt32(0x62646C34);
+		stream.seek(0x0C);
+		stream.writeUInt32(0x09);
+	}
+	else {
+		stream.writeUInt32(0x626D6433);
+		stream.seek(0x0C);
+		stream.writeUInt32(0x08);
+	}
+
+	stream.seek(0x08);
+	stream.writeUInt32(finalSize);
 }
 
 void AJekyllContext::OnFileDropped(std::filesystem::path filePath) {

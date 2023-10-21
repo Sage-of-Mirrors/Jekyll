@@ -15,6 +15,8 @@
 
 class MScenegraph;
 class MJointData;
+class MShapeData;
+
 class AJ3DContext;
 
 namespace bStream {
@@ -45,6 +47,7 @@ class AJekyllContext {
     MMiscModelData mMiscModelData;
     MScenegraph* mScenegraph;
     MJointData* mJointData;
+    MShapeData* mShapeData;
 
     AJ3DContext* mJ3DContext;
 
@@ -55,6 +58,9 @@ class AJekyllContext {
     void OpenModelCB();
     void LoadModel(std::filesystem::path filePath);
     void LoadSections(bStream::CStream& stream);
+
+    void SaveModelCB();
+    void SaveModel(std::filesystem::path filePath);
 
 public:
     AJekyllContext();
