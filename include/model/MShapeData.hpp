@@ -46,6 +46,8 @@ public:
     MShapeData();
     ~MShapeData();
 
+    const std::vector<MShape*> GetShapes() const { return mShapes; }
+
     void LoadShapeData(bStream::CStream& stream);
     void SaveShapeData(bStream::CStream& stream);
 };

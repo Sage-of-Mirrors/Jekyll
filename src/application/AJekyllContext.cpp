@@ -5,6 +5,9 @@
 #include "model/MJointData.hpp"
 #include "model/MShapeData.hpp"
 
+#include "ui/properties/UJointPropertiesTab.hpp"
+#include "ui/properties/UShapePropertiesTab.hpp"
+
 #include <bstream.h>
 
 #include <imgui.h>
@@ -13,8 +16,8 @@
 
 
 AJekyllContext::AJekyllContext() : bIsDockingConfigured(false), mMainDockSpaceID(UINT32_MAX), mDockNodeTopID(UINT32_MAX),
-	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX), mScenegraph(nullptr), mJointData(nullptr),
-	mJ3DContext(nullptr), mMainViewport(nullptr), mLightsPanel(nullptr)
+	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX), mScenegraph(nullptr),
+	mJointData(nullptr), mShapeData(nullptr), mJ3DContext(nullptr), mMainViewport(nullptr), mLightsPanel(nullptr)
 {
 
 }
@@ -184,6 +187,9 @@ void AJekyllContext::LoadModel(std::filesystem::path filePath) {
 	mMainViewport = new UViewport("Main Viewport");
 
 	LoadSections(fileStream);
+
+	mPropertiesPanel.AddTab(new UJointPropertiesTab(mJointData));
+	mPropertiesPanel.AddTab(new UShapePropertiesTab(mShapeData));
 }
 
 void AJekyllContext::LoadSections(bStream::CStream& stream) {
@@ -301,6 +307,10 @@ void AJekyllContext::SaveModel(std::filesystem::path filePath) {
 
 	stream.seek(0x08);
 	stream.writeUInt32(finalSize);
+
+	// Write watermark - might remove this later, idk
+	stream.seek(0x10);
+	stream.writeString("Made with Jekyll");
 }
 
 void AJekyllContext::OnFileDropped(std::filesystem::path filePath) {

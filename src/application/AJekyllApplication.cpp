@@ -62,6 +62,15 @@ bool AJekyllApplication::Setup() {
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
 
+	io.Fonts->AddFontDefault();
+
+	ImFontConfig config;
+	config.MergeMode = true;
+	config.GlyphMinAdvanceX = 13.0f;
+
+	static const ImWchar icon_ranges[] = { 0xE000 , 0x10fffd , 0 };
+	io.Fonts->AddFontFromFileTTF("asset/font/MaterialSymbolsRounded.ttf", 13.0f, &config, icon_ranges);
+
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
 	ImGui_ImplOpenGL3_Init("#version 150");

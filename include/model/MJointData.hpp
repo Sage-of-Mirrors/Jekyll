@@ -38,6 +38,8 @@ struct MJoint {
     uint8_t mKind;
     EJointMatrixType mMatrixType;
     bool bIgnoreParentScale;
+
+    const char* GetName() const { return mName.data(); }
 };
 
 class MJointData {
@@ -54,6 +56,9 @@ class MJointData {
 public:
     MJointData();
     ~MJointData();
+
+    const std::vector<MJoint*> GetJoints() const { return mJoints; }
+    MJoint* GetRootJoint() const { return mRoot; }
 
     void LoadJointData(bStream::CStream& stream, const MScenegraphNode* sceneRoot);
     void SaveJointData(bStream::CStream& stream);
