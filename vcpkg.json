@@ -5,6 +5,7 @@
         "zlib",
         "libpng",
         "freeglut",
-        "glfw3"
+        "glfw3",
+        "magic-enum"
     ]
 }
