@@ -68,20 +68,20 @@ void MJointData::ReadJoints() {
 
     for (uint32_t i = 0; i < jntCount; i++) {
         MJoint* newJnt = new MJoint();
-        newJnt->mName = jntNameTable.GetName(i);
+        newJnt->Name = jntNameTable.GetName(i);
 
         uint16_t flags = dataStrm.readUInt16();
-        newJnt->mKind = flags & 0x0F;
-        newJnt->mMatrixType = static_cast<EJointMatrixType>((flags & 0xF0) >> 4);
+        newJnt->Kind = flags & 0x0F;
+        newJnt->MatrixType = static_cast<EJointMatrixType>((flags & 0xF0) >> 4);
 
         uint8_t ignoreParentScale = dataStrm.readUInt8();
         newJnt->bIgnoreParentScale = ignoreParentScale == 0xFF ? false : ignoreParentScale;
 
         dataStrm.skip(1);
 
-        newJnt->mScale.x = dataStrm.readFloat();
-        newJnt->mScale.y = dataStrm.readFloat();
-        newJnt->mScale.z = dataStrm.readFloat();
+        newJnt->Scale.x = dataStrm.readFloat();
+        newJnt->Scale.y = dataStrm.readFloat();
+        newJnt->Scale.z = dataStrm.readFloat();
 
         glm::vec3 eulerAngles;
         eulerAngles.x = dataStrm.readUInt16() * (180.0f / 65535.0f);
@@ -89,11 +89,11 @@ void MJointData::ReadJoints() {
         eulerAngles.z = dataStrm.readUInt16() * (180.0f / 65535.0f);
         dataStrm.skip(2);
 
-        newJnt->mRotation = glm::quat(eulerAngles);
+        newJnt->Rotation = glm::quat(eulerAngles);
 
-        newJnt->mPosition.x = dataStrm.readFloat();
-        newJnt->mPosition.y = dataStrm.readFloat();
-        newJnt->mPosition.z = dataStrm.readFloat();
+        newJnt->Position.x = dataStrm.readFloat();
+        newJnt->Position.y = dataStrm.readFloat();
+        newJnt->Position.z = dataStrm.readFloat();
 
         dataStrm.skip(0x1C);
 
@@ -110,8 +110,8 @@ void MJointData::SaveJointData(bStream::CStream& stream) {
     stream.seek(curPos + mJointDataOffset);
 
     for (MJoint* jnt : mJoints) {
-        uint16_t flags = jnt->mKind;
-        flags |= (static_cast<uint8_t>(jnt->mMatrixType) & 0x0F) << 4;
+        uint16_t flags = jnt->Kind;
+        flags |= (static_cast<uint8_t>(jnt->MatrixType) & 0x0F) << 4;
 
         stream.writeUInt16(flags);
         stream.writeUInt8(jnt->bIgnoreParentScale);

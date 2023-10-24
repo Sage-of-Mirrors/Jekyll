@@ -23,23 +23,23 @@ enum class EJointMatrixType : uint8_t {
 struct MJoint {
     // Static members
 
-    std::string mName;
+    std::string Name;
 
-    glm::vec3 mPosition;
-    glm::quat mRotation;
-    glm::vec3 mScale;
+    glm::vec3 Position;
+    glm::quat Rotation;
+    glm::vec3 Scale;
 
-    MJoint* mParent;
-    std::vector<MJoint*> mChildren;
+    MJoint* Parent;
+    std::vector<MJoint*> Children;
 
 
     // Editable members
 
-    uint8_t mKind;
-    EJointMatrixType mMatrixType;
+    uint8_t Kind;
+    EJointMatrixType MatrixType;
     bool bIgnoreParentScale;
 
-    const char* GetName() const { return mName.data(); }
+    const char* GetName() const { return Name.data(); }
 };
 
 class MJointData {

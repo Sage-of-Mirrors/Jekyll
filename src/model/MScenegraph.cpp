@@ -205,14 +205,14 @@ void MScenegraphNode::RenderUI_Recursive(const J3DNameTable* jntNames, const J3D
 
 void MScenegraphNode::SetupJointHierarchy_Recursive(std::vector<MJoint*>& joints) const {
     if (mParent == nullptr) {
-        joints[mJointIdx]->mParent = nullptr;
+        joints[mJointIdx]->Parent = nullptr;
     }
     else {
-        joints[mJointIdx]->mParent = joints[mParent->mJointIdx];
+        joints[mJointIdx]->Parent = joints[mParent->mJointIdx];
     }
 
     for (MScenegraphNode* child : mChildren) {
-        joints[mJointIdx]->mChildren.push_back(joints[child->mJointIdx]);
+        joints[mJointIdx]->Children.push_back(joints[child->mJointIdx]);
 
         child->SetupJointHierarchy_Recursive(joints);
     }

@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(GLFW3 REQUIRED)
+find_package(magic_enum REQUIRED)
 
 add_subdirectory(lib)
 
@@ -35,4 +36,4 @@ add_executable(jekyll ${JEKYLL_SRC})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/asset/font/MaterialSymbolsRounded.ttf DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/asset/font)
 
 target_include_directories(jekyll PUBLIC include lib/glad/include lib/bStream lib/glm lib/ImGuiFileDialog)
-target_link_libraries(jekyll PUBLIC glm j3dultra imgui glfw)
+target_link_libraries(jekyll PUBLIC glm j3dultra imgui glfw magic_enum::magic_enum)

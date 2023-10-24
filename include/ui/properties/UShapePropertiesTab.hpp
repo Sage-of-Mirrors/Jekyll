@@ -5,7 +5,7 @@
 #include <string>
 
 
-class MShape;
+struct MShape;
 class MShapeData;
 
 class UShapePropertiesTab : public UPropertiesTabBase {

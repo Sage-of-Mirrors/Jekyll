@@ -5,11 +5,12 @@
 #include <string>
 
 
-class MJoint;
+struct MJoint;
 class MJointData;
 
 class UJointPropertiesTab : public UPropertiesTabBase {
     MJointData* mJointData;
+    MJoint* mSelectedJoint;
 
     void RenderJoints_Recursive(MJoint* jnt);
 

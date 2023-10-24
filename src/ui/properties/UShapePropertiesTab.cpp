@@ -1,4 +1,5 @@
 #include "ui/properties/UShapePropertiesTab.hpp"
+#include "ui/UEnumCombo.hpp"
 
 #include "model/MShapeData.hpp"
 
@@ -50,8 +51,11 @@ void UShapePropertiesTab::Render() {
 
         ImGui::SetCursorPos({ contentMin.x + 35, ImGui::GetCursorPosY() + 4});
 
-        ImGui::BeginChild("##shapeProps", { contentMax.x - contentMin.x - 40, 300 });
-        ImGui::Text("test");
+        ImGui::BeginChild("##shapeProps", { contentMax.x - contentMin.x - 40, 40 });
+
+        ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 6, ImGui::GetCursorPosY() + 10});
+        UEnumCombo("Matrix Type", mCurrentShape->MatrixType);
+
         ImGui::EndChild();
 
         ImGui::PopStyleVar(2);
