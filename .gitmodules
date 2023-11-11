@@ -17,3 +17,6 @@
 [submodule "lib/magic_enum"]
 	path = lib/magic_enum
 	url = git@github.com:Neargye/magic_enum.git
+[submodule "lib/libbti"]
+	path = lib/libbti
+	url = git@github.com:Sage-of-Mirrors/libbti.git
