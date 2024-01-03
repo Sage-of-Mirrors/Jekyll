@@ -16,6 +16,7 @@
 class MScenegraph;
 class MJointData;
 class MShapeData;
+class MTextureData;
 
 class AJ3DContext;
 
@@ -48,6 +49,7 @@ class AJekyllContext {
     MScenegraph* mScenegraph;
     MJointData* mJointData;
     MShapeData* mShapeData;
+    MTextureData* mTextureData;
 
     AJ3DContext* mJ3DContext;
 
@@ -58,6 +60,9 @@ class AJekyllContext {
     void OpenModelCB();
     void LoadModel(std::filesystem::path filePath);
     void LoadSections(bStream::CStream& stream);
+
+    void LoadMaterialTable(std::filesystem::path filePath);
+    void LoadAnimation(std::filesystem::path filePath);
 
     void SaveModelCB();
     void SaveModel(std::filesystem::path filePath);

@@ -4,9 +4,11 @@
 #include "model/MScenegraph.hpp"
 #include "model/MJointData.hpp"
 #include "model/MShapeData.hpp"
+#include "model/MTextureData.hpp"
 
 #include "ui/properties/UJointPropertiesTab.hpp"
 #include "ui/properties/UShapePropertiesTab.hpp"
+#include "ui/properties/UTexturePropertiesTab.hpp"
 
 #include <bstream.h>
 
@@ -17,7 +19,7 @@
 
 AJekyllContext::AJekyllContext() : bIsDockingConfigured(false), mMainDockSpaceID(UINT32_MAX), mDockNodeTopID(UINT32_MAX),
 	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX), mScenegraph(nullptr),
-	mJointData(nullptr), mShapeData(nullptr), mJ3DContext(nullptr), mMainViewport(nullptr), mLightsPanel(nullptr)
+	mJointData(nullptr), mShapeData(nullptr), mTextureData(nullptr), mJ3DContext(nullptr), mMainViewport(nullptr), mLightsPanel(nullptr)
 {
 
 }
@@ -25,6 +27,8 @@ AJekyllContext::AJekyllContext() : bIsDockingConfigured(false), mMainDockSpaceID
 AJekyllContext::~AJekyllContext() {
 	delete mScenegraph;
 	delete mJointData;
+	delete mShapeData;
+	delete mTextureData;
 
 	delete mJ3DContext;
 	delete mMainViewport;
@@ -190,6 +194,7 @@ void AJekyllContext::LoadModel(std::filesystem::path filePath) {
 
 	mPropertiesPanel.AddTab(new UJointPropertiesTab(mJointData));
 	mPropertiesPanel.AddTab(new UShapePropertiesTab(mShapeData));
+	mPropertiesPanel.AddTab(new UTexturePropertiesTab(mTextureData));
 }
 
 void AJekyllContext::LoadSections(bStream::CStream& stream) {
@@ -226,6 +231,13 @@ void AJekyllContext::LoadSections(bStream::CStream& stream) {
 
 				break;
 			}
+			case 0x54455831:
+			{
+				mTextureData = new MTextureData();
+				mTextureData->SetTextureData(mJ3DContext->GetTextures());
+
+				break;
+			}
 			default:
 			{
 				uint32_t sectionSize = stream.peekUInt32(stream.tell() + 4);
@@ -238,6 +250,14 @@ void AJekyllContext::LoadSections(bStream::CStream& stream) {
 			}
 		}
 	}
+}
+
+void AJekyllContext::LoadMaterialTable(std::filesystem::path filePath) {
+	mJ3DContext->LoadMaterialTable(bStream::CFileStream(filePath.generic_string(), bStream::Big, bStream::In));
+}
+
+void AJekyllContext::LoadAnimation(std::filesystem::path filePath) {
+	mJ3DContext->LoadAnimation(bStream::CFileStream(filePath.generic_string(), bStream::Big, bStream::In), filePath.extension().generic_string());
 }
 
 void AJekyllContext::SaveModelCB() {
@@ -287,9 +307,7 @@ void AJekyllContext::SaveModel(std::filesystem::path filePath) {
 		stream.writeBytes(sectionData, sectionSize);
 	}
 
-	// TEMPORARY: Write TEX1
-	mMiscModelData.GetSection(0x54455831, sectionSize, sectionData);
-	stream.writeBytes(sectionData, sectionSize);
+	mTextureData->SaveTextureData(stream);
 
 	size_t finalSize = stream.tell();
 	stream.seek(0x04);
@@ -314,5 +332,17 @@ void AJekyllContext::SaveModel(std::filesystem::path filePath) {
 }
 
 void AJekyllContext::OnFileDropped(std::filesystem::path filePath) {
-	LoadModel(filePath);
+	if (!filePath.has_extension()) {
+		return;
+	}
+
+	if (filePath.extension() == ".bmd" || filePath.extension() == ".bdl") {
+		LoadModel(filePath);
+	}
+	if (filePath.extension() == ".bmt") {
+		LoadMaterialTable(filePath);
+	}
+	else {
+		LoadAnimation(filePath);
+	}
 }

@@ -14,6 +14,7 @@ file(GLOB JEKYLL_SRC
     "include/*.hpp"
     "src/application/*.cpp"
     "include/application/*.hpp"
+    "include/img/*.h"
     "src/model/*.cpp"
     "include/model/*.hpp"
     "src/ui/*.cpp"
@@ -35,5 +36,5 @@ add_executable(jekyll ${JEKYLL_SRC})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/asset/font/MaterialSymbolsRounded.ttf DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/asset/font)
 
-target_include_directories(jekyll PUBLIC include lib/glad/include lib/bStream lib/glm lib/ImGuiFileDialog)
-target_link_libraries(jekyll PUBLIC glm j3dultra imgui glfw magic_enum::magic_enum)
+target_include_directories(jekyll PUBLIC include lib/glad/include lib/bStream lib/glm lib/ImGuiFileDialog lib/libbti/include)
+target_link_libraries(jekyll PUBLIC glm j3dultra imgui glfw magic_enum::magic_enum libbti)

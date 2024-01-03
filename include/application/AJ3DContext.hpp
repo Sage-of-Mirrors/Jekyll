@@ -1,13 +1,17 @@
 #pragma once
 
-#include <J3D/J3DLight.hpp>
+#include <J3D/Rendering/J3DLight.hpp>
 
 #include <memory>
+#include <vector>
+#include <filesystem>
 
 
 namespace bStream {
     class CStream;
 }
+
+struct J3DTexture;
 
 class ASceneCamera;
 class J3DModelData;
@@ -24,8 +28,13 @@ public:
     ~AJ3DContext() { }
 
     J3DLight* GetLights() { return mLights; }
+    std::vector<std::shared_ptr<J3DTexture>> GetTextures();
 
     void LoadModel(bStream::CStream& stream);
+    void LoadMaterialTable(bStream::CStream& stream);
+    void LoadAnimation(bStream::CStream& stream, const std::string& extension);
 
     void Render(ASceneCamera& camera, float deltaTime);
+
+    void ToggleBmt();
 };

@@ -1,14 +1,30 @@
 #include "application/AJ3DContext.hpp"
 #include "application/ACamera.hpp"
 
+//#include "img/toon.h"
+#include "img/toonex.h"
+#include "img/i_kumo.h"
+#include "img/i_kusa_a.h"
+#include "img/h_ma_rak.h"
+
 #include <bstream.h>
 #include <algorithm>
 
 #include <J3D/J3DModelLoader.hpp>
-#include <J3D/J3DModelData.hpp>
-#include <J3D/J3DModelInstance.hpp>
-#include <J3D/J3DRendering.hpp>
-#include <J3D/J3DUniformBufferObject.hpp>
+#include <J3D/Data/J3DModelData.hpp>
+#include <J3D/Data/J3DModelInstance.hpp>
+
+#include <J3D/Animation/J3DAnimationLoader.hpp>
+#include <J3D/Animation/J3DTexMatrixAnimationInstance.hpp>
+#include <J3D/Animation/J3DColorAnimationInstance.hpp>
+#include <J3D/Animation/J3DTexIndexAnimationInstance.hpp>
+#include <J3D/Animation/J3DJointAnimationInstance.hpp>
+#include <J3D/Animation/J3DJointFullAnimationInstance.hpp>
+#include <J3D/Animation/J3DVisibilityAnimationInstance.hpp>
+
+#include <J3D/Rendering/J3DRendering.hpp>
+#include <J3D/Material/J3DUniformBufferObject.hpp>
+#include <J3D/Material/J3DMaterialTableLoader.hpp>
 
 
 void SortFuncTest(J3DRendering::SortFunctionArgs packets) {
@@ -55,13 +71,59 @@ void AJ3DContext::LoadModel(bStream::CStream& stream) {
     J3DModelLoader loader;
     
     mModelData = loader.Load(&stream, 0);
-    mModelInstance = mModelData->GetInstance();
+    mModelInstance = mModelData->CreateInstance();
 
-    mLights[0].Color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    mLights[1].Color = { 1.0f, 1.0f, 1.0f, 1.0f };
-    mLights[2].Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	mLights[1].Position = { 0.0f, 1000.0f, 1000.0f, 1.0f };
+	mLights[1].DistAtten = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+    mLights[0].Color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    mLights[1].Color = { 1.0f, 0.0f, 0.0f, 1.0f };
+    mLights[2].Color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	J3DRendering::SetSortFunction(SortFuncTest);
+
+	//mModelData->SetTexture("ZAtoon", 256, 8, (uint8_t*)toon, 0);
+	mModelData->SetTexture("ZBtoonEX", 256, 256, (uint8_t*)toonex, 0);
+}
+
+void AJ3DContext::LoadMaterialTable(bStream::CStream& stream) {
+	if (mModelData == nullptr || mModelInstance == nullptr) {
+		return;
+	}
+
+	J3DMaterialTableLoader matTblLoader;
+
+	std::shared_ptr<J3DMaterialTable> tbl = matTblLoader.Load(&stream, mModelData);
+	tbl->SetTexture("ZBtoonEX", 256, 256, (uint8_t*)toonex, 0);
+
+	mModelInstance->SetInstanceMaterialTable(tbl);
+}
+
+void AJ3DContext::LoadAnimation(bStream::CStream& stream, const std::string& extension) {
+	if (mModelInstance == nullptr) {
+		return;
+	}
+
+	J3DAnimation::J3DAnimationLoader anmLoader;
+
+	if (extension == ".btk") {
+		mModelInstance->SetTexMatrixAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DTexMatrixAnimationInstance>(stream));
+	}
+	else if (extension == ".brk") {
+		mModelInstance->SetRegisterColorAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(stream));
+	}
+	else if (extension == ".btp") {
+		mModelInstance->SetTexIndexAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DTexIndexAnimationInstance>(stream));
+	}
+	else if (extension == ".bck") {
+		mModelInstance->SetJointAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DJointAnimationInstance>(stream));
+	}
+	else if (extension == ".bca") {
+		mModelInstance->SetJointFullAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DJointFullAnimationInstance>(stream));
+	}
+	else if (extension == ".bva") {
+		mModelInstance->SetVisibilityAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DVisibilityAnimationInstance>(stream));
+	}
 }
 
 void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
@@ -69,11 +131,31 @@ void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
         return;
     }
 
+	mModelInstance->UpdateAnimations(deltaTime);
+
     glm::mat4 projection = camera.GetProjectionMatrix();
     glm::mat4 view = camera.GetViewMatrix();
 
-    J3DUniformBufferObject::SetLights(mLights);
-    J3DUniformBufferObject::SetProjAndViewMatrices(&projection, &view);
+    //J3DUniformBufferObject::SetLights(mLights);
+    J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
 
-    J3DRendering::Render(deltaTime, camera.GetPosition(), projection, view, {mModelInstance});
+	mModelInstance->SetLight(mLights[0], 0);
+	mModelInstance->SetLight(mLights[1], 1);
+	mModelInstance->SetLight(mLights[2], 2);
+
+    J3DRendering::Render(deltaTime, camera.GetPosition(), view, projection, { mModelInstance });
+
+	//J3DUniformBufferObject::ClearUBO();
+}
+
+void AJ3DContext::ToggleBmt() {
+	mModelInstance->SetUseInstanceMaterialTable(!mModelInstance->GetUseInstanceMaterialTable());
+}
+
+std::vector<std::shared_ptr<J3DTexture>> AJ3DContext::GetTextures() {
+	if (mModelData == nullptr) {
+		return std::vector<std::shared_ptr<J3DTexture>>();
+	}
+
+	return mModelData->GetTextures();
 }

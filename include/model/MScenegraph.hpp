@@ -1,6 +1,6 @@
 #pragma once
 
-#include <J3D/J3DNameTable.hpp>
+#include <J3D/Util/J3DNameTable.hpp>
 
 #include <cstdint>
 #include <string>
