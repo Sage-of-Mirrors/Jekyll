@@ -12,6 +12,7 @@ class MTextureData;
 class UTexturePropertiesTab : public UPropertiesTabBase {
     MTextureData* mTextureData;
     std::weak_ptr<J3DTexture> mSelectedTexture;
+    uint32_t mSelectedMip;
 
     std::vector<uint32_t> mSelectedTextureViews;
 

@@ -15,7 +15,7 @@ UTexturePropertiesTab::UTexturePropertiesTab() : UTexturePropertiesTab(nullptr) 
 
 }
 
-UTexturePropertiesTab::UTexturePropertiesTab(MTextureData* texData) : mTextureData(texData) {
+UTexturePropertiesTab::UTexturePropertiesTab(MTextureData* texData) : mTextureData(texData), mSelectedMip(0) {
     mIcon = "T";
     mToolTip = "Textures";
 }
@@ -54,17 +54,51 @@ void UTexturePropertiesTab::Render() {
     if (!mSelectedTexture.expired()) {
         std::shared_ptr<J3DTexture> texLocked = mSelectedTexture.lock();
 
-        float centerX = (contentMax.x + contentMin.x) / 2.0f + 30.0f;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 35);
+        ImGui::SetNextItemWidth(contentMax.x - contentMin.x - 40);
 
-        for (uint32_t i = 0; i < texLocked->MipmapCount; i++) {
-            float mipWidth = texLocked->Width / std::pow(2.0f, i);
-            float mipHeight = texLocked->Height / std::pow(2.0f, i);
+        char mipComboVal[32];
+        std::snprintf(mipComboVal, 32, "Mip %i", mSelectedMip);
 
-            ImGui::SetCursorPosX(centerX - (mipWidth / 2.0f));
-            ImGui::Image((ImTextureID)mSelectedTextureViews[i], { mipWidth, mipHeight });
+        // Render the combo box for selecting MIP level
+        if (ImGui::BeginCombo("##mipCombo", mipComboVal)) {
+            for (uint32_t i = 0; i < texLocked->MipmapCount; i++) {
+                ImGui::PushID(i);
+
+                char mipSelectVal[32];
+                std::snprintf(mipSelectVal, 32, "Mip %i", i);
+
+                bool isSelected = mSelectedMip == i;
+                if (ImGui::Selectable(mipSelectVal, mSelectedMip == i)) {
+                    mSelectedMip = i;
+                }
+
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+
+                ImGui::PopID();
+            }
+
+            ImGui::EndCombo();
         }
 
-        ImGui::Spacing();
+        // Render texture image, capping height to a max of 256.
+        {
+            float mipWidth = texLocked->Width / std::pow(2.0f, mSelectedMip);
+            float mipHeight = texLocked->Height / std::pow(2.0f, mSelectedMip);
+            float minHeight = std::min(mipHeight, 256.0f);
+
+            mipWidth = mipWidth * minHeight / mipHeight;
+            mipHeight = minHeight;
+
+            float centerX = (contentMax.x + contentMin.x) / 2.0f + 30.0f;
+
+            ImGui::SetCursorPosX(centerX - (mipWidth / 2.0f));
+            ImGui::Image((ImTextureID)mSelectedTextureViews[mSelectedMip], { mipWidth, mipHeight });
+        }
+
+        /*ImGui::Spacing();
 
         ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 35, ImGui::GetCursorPosY() + 10 });
         if (ImGui::CollapsingHeader("Basic Info")) {
@@ -73,11 +107,11 @@ void UTexturePropertiesTab::Render() {
 
             ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Wrap S", texLocked->WrapS)) {
-                //glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_WRAP_S, J3DTextureFactory::GXWrapToGLWrap(texLocked->WrapS));
+                glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_WRAP_S, J3DTextureFactory::GXWrapToGLWrap(texLocked->WrapS));
             }
             ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Wrap T", texLocked->WrapT)) {
-                //glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_WRAP_T, J3DTextureFactory::GXWrapToGLWrap(texLocked->WrapT));
+                glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_WRAP_T, J3DTextureFactory::GXWrapToGLWrap(texLocked->WrapT));
             }
         }
 
@@ -85,12 +119,12 @@ void UTexturePropertiesTab::Render() {
         if (ImGui::CollapsingHeader("Mipmap Info")) {
             ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Min Filter", texLocked->MinFilter)) {
-                //glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_MIN_FILTER, J3DTextureFactory::GXFilterToGLFilter(texLocked->MinFilter));
+                glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_MIN_FILTER, J3DTextureFactory::GXFilterToGLFilter(texLocked->MinFilter));
             }
 
             ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Mag Filter", texLocked->MagFilter)) {
-                //glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_MAG_FILTER, J3DTextureFactory::GXFilterToGLFilter(texLocked->MagFilter));
+                glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_MAG_FILTER, J3DTextureFactory::GXFilterToGLFilter(texLocked->MagFilter));
             }
 
             ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
@@ -110,9 +144,9 @@ void UTexturePropertiesTab::Render() {
 
             ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Max Anisotropy", texLocked->MaxAnisotropy)) {
-                //glTextureParameterf(texLocked->TexHandle, GL_TEXTURE_MAX_ANISOTROPY, J3DTextureFactory::GXAnisoToGLAniso(texLocked->MaxAnisotropy));
+                glTextureParameterf(texLocked->TexHandle, GL_TEXTURE_MAX_ANISOTROPY, J3DTextureFactory::GXAnisoToGLAniso(texLocked->MaxAnisotropy));
             }
-        }
+        }*/
     }
 
     ImGui::PopStyleVar(2);
