@@ -16,6 +16,7 @@ struct J3DTexture;
 class ASceneCamera;
 class J3DModelData;
 class J3DModelInstance;
+class J3DMaterial;
 
 class AJ3DContext {
     std::shared_ptr<J3DModelData> mModelData;
@@ -29,6 +30,7 @@ public:
 
     J3DLight* GetLights() { return mLights; }
     std::vector<std::shared_ptr<J3DTexture>> GetTextures();
+    std::vector<std::shared_ptr<J3DMaterial>> GetMaterials();
 
     void LoadModel(bStream::CStream& stream);
     void LoadMaterialTable(bStream::CStream& stream);

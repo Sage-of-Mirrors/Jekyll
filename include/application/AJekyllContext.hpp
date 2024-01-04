@@ -17,6 +17,7 @@ class MScenegraph;
 class MJointData;
 class MShapeData;
 class MTextureData;
+class MMaterialData;
 
 class AJ3DContext;
 
@@ -50,6 +51,7 @@ class AJekyllContext {
     MJointData* mJointData;
     MShapeData* mShapeData;
     MTextureData* mTextureData;
+    MMaterialData* mMaterialData;
 
     AJ3DContext* mJ3DContext;
 

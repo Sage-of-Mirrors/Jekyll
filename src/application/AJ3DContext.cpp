@@ -23,6 +23,8 @@
 #include <J3D/Animation/J3DVisibilityAnimationInstance.hpp>
 
 #include <J3D/Rendering/J3DRendering.hpp>
+
+#include <J3D/Material/J3DMaterial.hpp>
 #include <J3D/Material/J3DUniformBufferObject.hpp>
 #include <J3D/Material/J3DMaterialTableLoader.hpp>
 
@@ -158,4 +160,12 @@ std::vector<std::shared_ptr<J3DTexture>> AJ3DContext::GetTextures() {
 	}
 
 	return mModelData->GetTextures();
+}
+
+std::vector<std::shared_ptr<J3DMaterial>> AJ3DContext::GetMaterials() {
+	if (mModelData == nullptr) {
+		return std::vector<std::shared_ptr<J3DMaterial>>();
+	}
+
+	return mModelData->GetMaterials();
 }

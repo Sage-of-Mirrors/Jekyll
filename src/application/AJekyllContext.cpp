@@ -5,10 +5,12 @@
 #include "model/MJointData.hpp"
 #include "model/MShapeData.hpp"
 #include "model/MTextureData.hpp"
+#include "model/MMaterialData.hpp"
 
 #include "ui/properties/UJointPropertiesTab.hpp"
 #include "ui/properties/UShapePropertiesTab.hpp"
 #include "ui/properties/UTexturePropertiesTab.hpp"
+#include "ui/properties/UMaterialPropertiesTab.hpp"
 
 #include <bstream.h>
 
@@ -19,7 +21,8 @@
 
 AJekyllContext::AJekyllContext() : bIsDockingConfigured(false), mMainDockSpaceID(UINT32_MAX), mDockNodeTopID(UINT32_MAX),
 	mDockNodeRightID(UINT32_MAX), mDockNodeDownID(UINT32_MAX), mDockNodeLeftID(UINT32_MAX), mScenegraph(nullptr),
-	mJointData(nullptr), mShapeData(nullptr), mTextureData(nullptr), mJ3DContext(nullptr), mMainViewport(nullptr), mLightsPanel(nullptr)
+	mJointData(nullptr), mShapeData(nullptr), mTextureData(nullptr), mMaterialData(nullptr), mJ3DContext(nullptr),
+	mMainViewport(nullptr), mLightsPanel(nullptr)
 {
 
 }
@@ -29,6 +32,7 @@ AJekyllContext::~AJekyllContext() {
 	delete mJointData;
 	delete mShapeData;
 	delete mTextureData;
+	delete mMaterialData;
 
 	delete mJ3DContext;
 	delete mMainViewport;
@@ -195,6 +199,7 @@ void AJekyllContext::LoadModel(std::filesystem::path filePath) {
 	mPropertiesPanel.AddTab(new UJointPropertiesTab(mJointData));
 	mPropertiesPanel.AddTab(new UShapePropertiesTab(mShapeData));
 	mPropertiesPanel.AddTab(new UTexturePropertiesTab(mTextureData));
+	mPropertiesPanel.AddTab(new UMaterialPropertiesTab(mMaterialData));
 }
 
 void AJekyllContext::LoadSections(bStream::CStream& stream) {
@@ -237,6 +242,11 @@ void AJekyllContext::LoadSections(bStream::CStream& stream) {
 				mTextureData->SetTextureData(mJ3DContext->GetTextures());
 
 				break;
+			}
+			case 0x4D415433:
+			{
+				mMaterialData = new MMaterialData();
+				mMaterialData->SetMaterialData(mJ3DContext->GetMaterials());
 			}
 			default:
 			{

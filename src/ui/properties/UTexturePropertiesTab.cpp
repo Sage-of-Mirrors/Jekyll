@@ -98,55 +98,61 @@ void UTexturePropertiesTab::Render() {
             ImGui::Image((ImTextureID)mSelectedTextureViews[mSelectedMip], { mipWidth, mipHeight });
         }
 
-        /*ImGui::Spacing();
+        ImGui::Spacing();
 
-        ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 35, ImGui::GetCursorPosY() + 10 });
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 34);
+        ImGui::SetNextItemWidth(contentMax.x - contentMin.x);
+
         if (ImGui::CollapsingHeader("Basic Info")) {
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
+            ImGui::Indent(65.0f);
+
             UEnumCombo("Format", texLocked->TextureFormat);
 
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Wrap S", texLocked->WrapS)) {
                 glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_WRAP_S, J3DTextureFactory::GXWrapToGLWrap(texLocked->WrapS));
             }
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
+
             if (UEnumCombo("Wrap T", texLocked->WrapT)) {
                 glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_WRAP_T, J3DTextureFactory::GXWrapToGLWrap(texLocked->WrapT));
             }
+
+            ImGui::Unindent(65.0f);
         }
 
-        ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 35, ImGui::GetCursorPosY() + 10 });
+        ImGui::Spacing();
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 34);
+        ImGui::SetNextItemWidth(contentMax.x - contentMin.x);
+
         if (ImGui::CollapsingHeader("Mipmap Info")) {
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
+            ImGui::Indent(65.0f);
+
             if (UEnumCombo("Min Filter", texLocked->MinFilter)) {
                 glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_MIN_FILTER, J3DTextureFactory::GXFilterToGLFilter(texLocked->MinFilter));
             }
 
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Mag Filter", texLocked->MagFilter)) {
                 glTextureParameteri(texLocked->TexHandle, GL_TEXTURE_MAG_FILTER, J3DTextureFactory::GXFilterToGLFilter(texLocked->MagFilter));
             }
 
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (ImGui::InputInt("Min LOD", &texLocked->MinLOD)) {
                 glTextureParameterf(texLocked->TexHandle, GL_TEXTURE_MIN_LOD, static_cast<float>(texLocked->MinLOD) * 0.125f);
             }
 
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (ImGui::InputInt("Max LOD", &texLocked->MaxLOD)) {
                 glTextureParameterf(texLocked->TexHandle, GL_TEXTURE_MAX_LOD, static_cast<float>(texLocked->MaxLOD) * 0.125f);
             }
 
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (ImGui::InputInt("LOD Bias", &texLocked->LODBias)) {
                 glTextureParameterf(texLocked->TexHandle, GL_TEXTURE_LOD_BIAS, static_cast<float>(texLocked->LODBias) * 0.01f);
             }
 
-            ImGui::SetCursorPos({ ImGui::GetCursorPosX() + 60, ImGui::GetCursorPosY() + 10 });
             if (UEnumCombo("Max Anisotropy", texLocked->MaxAnisotropy)) {
                 glTextureParameterf(texLocked->TexHandle, GL_TEXTURE_MAX_ANISOTROPY, J3DTextureFactory::GXAnisoToGLAniso(texLocked->MaxAnisotropy));
             }
-        }*/
+
+            ImGui::Unindent(65.0f);
+        }
     }
 
     ImGui::PopStyleVar(2);
