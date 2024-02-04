@@ -12,6 +12,8 @@
 #include "ui/properties/UTexturePropertiesTab.hpp"
 #include "ui/properties/UMaterialPropertiesTab.hpp"
 
+#include "application/AInput.hpp"
+
 #include <bstream.h>
 
 #include <imgui.h>
@@ -113,6 +115,23 @@ void AJekyllContext::Update(float deltaTime) {
 		}
 
 		++it;
+	}
+
+	//if (AInput::GetMouseButton(0) && mJ3DContext != nullptr) {
+	//	glm::vec2 mPos = AInput::GetMousePosition();
+	//	mJ3DContext->PickQuery(mPos.x, mPos.y);
+	//}
+
+	if (mJ3DContext != nullptr) {
+		glm::vec2 vOrig = glm::vec2(mMainViewport->mViewportOriginX, mMainViewport->mViewportOriginY);
+		glm::vec2 mPos = AInput::GetMousePosition();
+
+		glm::vec2 qPos = mPos;
+		qPos.y = mMainViewport->GetViewportSize().y - qPos.y;
+		qPos += vOrig;
+
+		mJ3DContext->HoverQuery(qPos);
+		mJ3DContext->ResizePickingBuffer(mMainViewport->GetViewportSize());
 	}
 }
 

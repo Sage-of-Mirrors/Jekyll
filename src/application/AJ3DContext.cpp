@@ -28,6 +28,8 @@
 #include <J3D/Material/J3DUniformBufferObject.hpp>
 #include <J3D/Material/J3DMaterialTableLoader.hpp>
 
+#include <J3D/Picking/J3DPicking.hpp>
+
 
 void SortFuncTest(J3DRendering::SortFunctionArgs packets) {
 	std::vector<J3DRenderPacket> opaquePackets;
@@ -65,6 +67,14 @@ void SortFuncTest(J3DRendering::SortFunctionArgs packets) {
 	for (J3DRenderPacket packet : xluPackets) {
 		packets.push_back(packet);
 	}
+}
+
+AJ3DContext::AJ3DContext() {
+	J3D::Picking::InitFramebuffer(560, 745);
+}
+
+AJ3DContext::~AJ3DContext() {
+	J3D::Picking::DestroyFramebuffer();
 }
 
 void AJ3DContext::LoadModel(bStream::CStream& stream) {
@@ -146,6 +156,7 @@ void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
 	mModelInstance->SetLight(mLights[2], 2);
 
     J3DRendering::Render(deltaTime, camera.GetPosition(), view, projection, { mModelInstance });
+	J3D::Picking::RenderPickingScene(view, projection, { mModelInstance });
 
 	//J3DUniformBufferObject::ClearUBO();
 }
@@ -168,4 +179,39 @@ std::vector<std::shared_ptr<J3DMaterial>> AJ3DContext::GetMaterials() {
 	}
 
 	return mModelData->GetMaterials();
+}
+
+void AJ3DContext::PickQuery(uint32_t x, uint32_t y) {
+	J3D::Picking::ModelMaterialIdPair p = J3D::Picking::Query(x, y);
+	std::cout << "Picked Model Id " << std::get<0>(p)  << ", mat Id " << std::get<1>(p) << ".\n";
+}
+
+void AJ3DContext::HoverQuery(glm::vec2 mousePos) {
+	std::vector<std::shared_ptr<J3DMaterial>> materials = GetMaterials();
+
+	for (std::shared_ptr<J3DMaterial> m : materials) {
+		if (m->IsSelected()) {
+			m->SetSelected(false);
+		}
+	}
+
+	J3D::Picking::ModelMaterialIdPair p = J3D::Picking::Query(mousePos.x, mousePos.y);
+
+	uint16_t modelId = std::get<0>(p);
+	uint16_t matId = std::get<1>(p);
+
+	if (modelId == 0) {
+		return;
+	}
+
+	for (std::shared_ptr<J3DMaterial> m : materials) {
+		if (m->GetMaterialId() == matId) {
+			m->SetSelected(true);
+			break;
+		}
+	}
+}
+
+void AJ3DContext::ResizePickingBuffer(glm::vec2 size) {
+	J3D::Picking::ResizeFramebuffer(size.x, size.y);
 }

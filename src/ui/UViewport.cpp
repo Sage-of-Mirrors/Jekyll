@@ -68,6 +68,10 @@ void UViewport::RenderUI(float deltaTime) {
 
     ImGui::Begin(name.c_str(), &bIsOpen);
 
+    ImVec2 wPos = ImGui::GetWindowPos();
+    mViewportOriginX = wPos.x;
+    mViewportOriginY = wPos.y;
+
     // This would normally be in an Update() function, but
     // the camera needs access to this ImGui window's input data.
     if (ImGui::IsWindowFocused()) {
@@ -75,7 +79,6 @@ void UViewport::RenderUI(float deltaTime) {
     }
 
     ResizeViewport();
-
     ImGui::Image((void*)mTexIds[TEX_COLOR], { mViewportWidth, mViewportHeight }, { 0, 1 }, { 1, 0 });
 
     ImGui::End();

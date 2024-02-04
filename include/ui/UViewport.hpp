@@ -24,11 +24,16 @@ class UViewport {
     void ResizeViewport();
 
 public:
+    uint32_t mViewportOriginX;
+    uint32_t mViewportOriginY;
+
     UViewport() : UViewport("Viewport") { }
     UViewport(std::string name);
     ~UViewport();
 
     bool IsOpen() const { return bIsOpen; }
+
+    glm::vec2 GetViewportSize() const { return glm::vec2(mViewportWidth, mViewportHeight); }
 
     void RenderUI(float deltaTime);
     void RenderScene(AJ3DContext* ctx, float deltaTime);

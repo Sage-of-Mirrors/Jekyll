@@ -25,8 +25,8 @@ class AJ3DContext {
     J3DLight mLights[8];
 
 public:
-    AJ3DContext() { }
-    ~AJ3DContext() { }
+    AJ3DContext();
+    ~AJ3DContext();
 
     J3DLight* GetLights() { return mLights; }
     std::vector<std::shared_ptr<J3DTexture>> GetTextures();
@@ -39,4 +39,8 @@ public:
     void Render(ASceneCamera& camera, float deltaTime);
 
     void ToggleBmt();
+
+    void PickQuery(uint32_t x, uint32_t y);
+    void HoverQuery(glm::vec2 mousePos);
+    void ResizePickingBuffer(glm::vec2 size);
 };
