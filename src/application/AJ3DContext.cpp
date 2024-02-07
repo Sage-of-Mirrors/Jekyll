@@ -31,7 +31,7 @@
 #include <J3D/Picking/J3DPicking.hpp>
 
 
-void SortFuncTest(J3DRendering::SortFunctionArgs packets) {
+void SortFuncTest(J3D::Rendering::RenderPacketVector& packets) {
 	std::vector<J3DRenderPacket> opaquePackets;
 	std::vector<J3DRenderPacket> xluPackets;
 
@@ -92,7 +92,7 @@ void AJ3DContext::LoadModel(bStream::CStream& stream) {
     mLights[1].Color = { 1.0f, 0.0f, 0.0f, 1.0f };
     mLights[2].Color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-	J3DRendering::SetSortFunction(SortFuncTest);
+	J3D::Rendering::SetSortFunction(SortFuncTest);
 
 	//mModelData->SetTexture("ZAtoon", 256, 8, (uint8_t*)toon, 0);
 	mModelData->SetTexture("ZBtoonEX", 256, 256, (uint8_t*)toonex, 0);
@@ -155,10 +155,10 @@ void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
 	mModelInstance->SetLight(mLights[1], 1);
 	mModelInstance->SetLight(mLights[2], 2);
 
-    J3DRendering::Render(deltaTime, camera.GetPosition(), view, projection, { mModelInstance });
-	J3D::Picking::RenderPickingScene(view, projection, { mModelInstance });
+	J3D::Rendering::RenderPacketVector sortedPackets = J3D::Rendering::SortPackets({ mModelInstance }, camera.GetPosition());
 
-	//J3DUniformBufferObject::ClearUBO();
+    J3D::Rendering::Render(deltaTime, view, projection, sortedPackets);
+	J3D::Picking::RenderPickingScene(view, projection, sortedPackets);
 }
 
 void AJ3DContext::ToggleBmt() {
