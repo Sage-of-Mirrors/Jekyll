@@ -19,6 +19,10 @@
 AJekyllContext* JekyllContext = nullptr;
 
 void DealWithGLErrors(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char* message, const void* userParam) {
+	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
+		return;
+	}
+
 	std::cout << "GL CALLBACK: " << message << std::endl;
 }
 
@@ -54,7 +58,7 @@ bool AJekyllApplication::Setup() {
 	glClearColor(0.5f, 1.0f, 0.5f, 1.0f);
 	glfwSwapInterval(1);
 
-	glEnable(GL_DEBUG_OUTPUT);
+	//glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(DealWithGLErrors, nullptr);
 
 	// Initialize imgui
@@ -77,8 +81,9 @@ bool AJekyllApplication::Setup() {
 
 	// Create viewer context
 	mContext = new AJekyllContext();
-	JekyllContext = mContext;
+	mContext->OnGLInitialized();
 
+	JekyllContext = mContext;
 	return true;
 }
 
@@ -89,8 +94,6 @@ bool AJekyllApplication::Teardown() {
 	
 	glfwDestroyWindow(mWindow);
 	glfwTerminate();
-
-	//J3DUniformBufferObject::DestroyUBO();
 
 	delete mContext;
 

@@ -6,14 +6,7 @@ MMiscModelData::MMiscModelData() : mHeaderData(nullptr) {
 }
 
 MMiscModelData::~MMiscModelData() {
-    delete[] mHeaderData;
-
-    for (auto& [id, data] : mSectionData) {
-        delete[] data;
-    }
-
-    mSectionSizes.clear();
-    mSectionData.clear();
+    Clear();
 }
 
 void MMiscModelData::AddSection(uint32_t id, uint32_t size, uint8_t* data) {
@@ -31,4 +24,15 @@ void MMiscModelData::GetSection(uint32_t id, uint32_t& size, uint8_t*& data) {
 
     size = mSectionSizes[id];
     data = mSectionData[id];
+}
+
+void MMiscModelData::Clear() {
+    delete[] mHeaderData;
+
+    for (auto& [id, data] : mSectionData) {
+        delete[] data;
+    }
+
+    mSectionSizes.clear();
+    mSectionData.clear();
 }

@@ -22,4 +22,6 @@ public:
 
     void SetHeader(uint8_t* data) { mHeaderData = data; }
     uint8_t* GetHeader() const { return mHeaderData; }
+
+    void Clear();
 };

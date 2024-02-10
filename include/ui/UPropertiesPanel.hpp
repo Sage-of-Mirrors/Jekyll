@@ -20,6 +20,7 @@ public:
     ~UPropertiesPanel();
 
     void AddTab(UPropertiesTabBase* tab) { mTabs.push_back(tab); }
+    UPropertiesTabBase* GetTab(uint32_t index) { return mTabs[index]; }
 
     void Render();
 };

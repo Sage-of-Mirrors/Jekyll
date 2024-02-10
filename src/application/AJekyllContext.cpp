@@ -122,16 +122,16 @@ void AJekyllContext::Update(float deltaTime) {
 	//	mJ3DContext->PickQuery(mPos.x, mPos.y);
 	//}
 
-	if (mJ3DContext != nullptr) {
-		glm::vec2 vOrig = glm::vec2(mMainViewport->mViewportOriginX, mMainViewport->mViewportOriginY);
-		glm::vec2 mPos = AInput::GetMousePosition();
+	if (mJ3DContext->IsModelLoaded()) {
+		//glm::vec2 vOrig = glm::vec2(mMainViewport->mViewportOriginX, mMainViewport->mViewportOriginY);
+		//glm::vec2 mPos = AInput::GetMousePosition();
 
-		glm::vec2 qPos = mPos;
-		qPos.y = mMainViewport->GetViewportSize().y - qPos.y;
-		qPos += vOrig;
+		//glm::vec2 qPos = mPos;
+		//qPos.y = mMainViewport->GetViewportSize().y - qPos.y;
+		//qPos += vOrig;
 
-		mJ3DContext->HoverQuery(qPos);
-		mJ3DContext->ResizePickingBuffer(mMainViewport->GetViewportSize());
+		//mJ3DContext->HoverQuery(qPos);
+		//mJ3DContext->ResizePickingBuffer(mMainViewport->GetViewportSize());
 	}
 }
 
@@ -143,9 +143,9 @@ void AJekyllContext::Render(float deltaTime) {
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0.15f, 0.15f, 0.15f, 1.0f });
 
     //mScenePanel.Render(mScenegraph);
-	mPropertiesPanel.Render();
+	//mPropertiesPanel.Render();
 
-	if (mJ3DContext != nullptr) {
+	if (mJ3DContext->IsModelLoaded()) {
 		mMainViewport->RenderUI(deltaTime);
 
 		for (UViewport* v : mOtherViewports) {
@@ -179,7 +179,7 @@ void AJekyllContext::Render(float deltaTime) {
 }
 
 void AJekyllContext::PostRender(float deltaTime) {
-	if (mJ3DContext != nullptr) {
+	if (mJ3DContext->IsModelLoaded()) {
 		mMainViewport->RenderScene(mJ3DContext, deltaTime);
 
 		for (UViewport* v : mOtherViewports) {
@@ -192,6 +192,7 @@ void AJekyllContext::OpenModelCB() {
 	ImGuiFileDialog::Instance()->OpenDialog("loadModelDialog", "Open Model File", "J3D Models{.bmd,.bdl}", ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
 }
 
+#include <glad/glad.h>
 void AJekyllContext::LoadModel(std::filesystem::path filePath) {
 	if (!std::filesystem::exists(filePath)) {
 		std::cout << "File \"" << filePath << "\" does not exist!" << std::endl;
@@ -208,20 +209,13 @@ void AJekyllContext::LoadModel(std::filesystem::path filePath) {
 
 	bStream::CFileStream fileStream = bStream::CFileStream(filePath.generic_string(), bStream::Big, bStream::In);
 
-	mJ3DContext = new AJ3DContext();
 	mJ3DContext->LoadModel(fileStream);
-
-	mMainViewport = new UViewport("Main Viewport");
-
-	LoadSections(fileStream);
-
-	mPropertiesPanel.AddTab(new UJointPropertiesTab(mJointData));
-	mPropertiesPanel.AddTab(new UShapePropertiesTab(mShapeData));
-	mPropertiesPanel.AddTab(new UTexturePropertiesTab(mTextureData));
-	mPropertiesPanel.AddTab(new UMaterialPropertiesTab(mMaterialData));
+	//LoadSections(fileStream);
 }
 
 void AJekyllContext::LoadSections(bStream::CStream& stream) {
+	mMiscModelData.Clear();
+
 	stream.seek(0);
 
 	uint32_t sectionCount = stream.peekUInt32(0x0C);
@@ -236,35 +230,61 @@ void AJekyllContext::LoadSections(bStream::CStream& stream) {
 		switch (sectionId) {
 			case 0x494E4631:
 			{
-				mScenegraph = new MScenegraph();
-				mScenegraph->LoadScenegraphData(stream);
+				if (mScenegraph == nullptr) {
+					mScenegraph = new MScenegraph();
+				}
+				else {
+					mScenegraph->Clear();
+				}
 
+				mScenegraph->LoadScenegraphData(stream);
 				break;
 			}
 			case 0x4A4E5431:
 			{
-				mJointData = new MJointData();
-				mJointData->LoadJointData(stream, mScenegraph->GetRoot());
+				if (mJointData == nullptr) {
+					mJointData = new MJointData();
+				}
+				else {
+					mJointData->Clear();
+				}
 
+				mJointData->LoadJointData(stream, mScenegraph->GetRoot());
 				break;
 			}
 			case 0x53485031:
 			{
-				mShapeData = new MShapeData();
-				mShapeData->LoadShapeData(stream);
+				if (mShapeData == nullptr) {
+					mShapeData = new MShapeData();
+				}
+				else {
+					mShapeData->Clear();
+				}
 
+				mShapeData->LoadShapeData(stream);
 				break;
 			}
 			case 0x54455831:
 			{
-				mTextureData = new MTextureData();
-				mTextureData->SetTextureData(mJ3DContext->GetTextures());
+				if (mTextureData == nullptr) {
+					mTextureData = new MTextureData();
+				}
+				else {
+					mTextureData->Clear();
+				}
 
+				mTextureData->SetTextureData(mJ3DContext->GetTextures());
 				break;
 			}
 			case 0x4D415433:
 			{
-				mMaterialData = new MMaterialData();
+				if (mMaterialData == nullptr) {
+					mMaterialData = new MMaterialData();
+				}
+				else {
+					mMaterialData->Clear();
+				}
+
 				mMaterialData->SetMaterialData(mJ3DContext->GetMaterials());
 			}
 			default:
@@ -358,6 +378,16 @@ void AJekyllContext::SaveModel(std::filesystem::path filePath) {
 	// Write watermark - might remove this later, idk
 	stream.seek(0x10);
 	stream.writeString("Made with Jekyll");
+}
+
+void AJekyllContext::OnGLInitialized() {
+	mJ3DContext = new AJ3DContext();
+	mMainViewport = new UViewport("Main Viewport");
+
+	mPropertiesPanel.AddTab(new UJointPropertiesTab());
+	mPropertiesPanel.AddTab(new UShapePropertiesTab());
+	mPropertiesPanel.AddTab(new UTexturePropertiesTab());
+	mPropertiesPanel.AddTab(new UMaterialPropertiesTab());
 }
 
 void AJekyllContext::OnFileDropped(std::filesystem::path filePath) {

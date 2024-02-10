@@ -18,9 +18,13 @@ MMaterialData::MMaterialData() : mSelectedMaterial() {
 }
 
 MMaterialData::~MMaterialData() {
-    mMaterials.clear();
+    Clear();
 }
 
 void MMaterialData::SaveMaterialData(bStream::CStream& stream) {
 
+}
+
+void MMaterialData::Clear() {
+    mMaterials.clear();
 }

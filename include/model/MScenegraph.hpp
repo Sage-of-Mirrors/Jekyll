@@ -89,4 +89,6 @@ public:
     void SaveScenegraph(bStream::CStream& stream);
 
     const MScenegraphNode* GetRoot() const { return mRoot; }
+
+    void Clear();
 };

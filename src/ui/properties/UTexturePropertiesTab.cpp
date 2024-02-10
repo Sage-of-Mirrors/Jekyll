@@ -38,7 +38,7 @@ void UTexturePropertiesTab::Render() {
 
     const auto& textures = mTextureData->GetTextures();
     for (uint32_t i = 0; i < textures.size(); i++) {
-        std::shared_ptr<J3DTexture> texLocked = textures[i];
+        std::shared_ptr<J3DTexture> texLocked = textures[i].lock();
 
         char buf[64];
         snprintf(buf, 64, "%s##%i", texLocked->Name.data(), i);

@@ -62,4 +62,6 @@ public:
 
     void LoadJointData(bStream::CStream& stream, const MScenegraphNode* sceneRoot);
     void SaveJointData(bStream::CStream& stream);
+
+    void Clear();
 };

@@ -18,9 +18,13 @@ MTextureData::MTextureData() : mSelectedTexture() {
 }
 
 MTextureData::~MTextureData() {
-    mTextures.clear();
+    Clear();
 }
 
 void MTextureData::SaveTextureData(bStream::CStream& stream) {
 
+}
+
+void MTextureData::Clear() {
+    mTextures.clear();
 }

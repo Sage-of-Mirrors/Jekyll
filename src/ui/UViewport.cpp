@@ -16,7 +16,7 @@ constexpr float COLOR_RESET[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 constexpr float DEPTH_RESET = 1.0f;
 
 
-UViewport::UViewport(std::string name) : mViewportName(name) {
+UViewport::UViewport(std::string name) : mViewportName(name), mViewportWidth(1), mViewportHeight(1) {
     CreateFramebuffer();
 }
 

@@ -79,6 +79,8 @@ AJ3DContext::~AJ3DContext() {
 
 void AJ3DContext::LoadModel(bStream::CStream& stream) {
 	stream.seek(0);
+	mModelInstance = nullptr;
+	mModelData = nullptr;
 
     J3DModelLoader loader;
     
@@ -95,11 +97,11 @@ void AJ3DContext::LoadModel(bStream::CStream& stream) {
 	J3D::Rendering::SetSortFunction(SortFuncTest);
 
 	//mModelData->SetTexture("ZAtoon", 256, 8, (uint8_t*)toon, 0);
-	mModelData->SetTexture("ZBtoonEX", 256, 256, (uint8_t*)toonex, 0);
+	//mModelData->SetTexture("ZBtoonEX", 256, 256, (uint8_t*)toonex, 0);
 }
 
 void AJ3DContext::LoadMaterialTable(bStream::CStream& stream) {
-	if (mModelData == nullptr || mModelInstance == nullptr) {
+	if (!IsModelLoaded()) {
 		return;
 	}
 
@@ -112,7 +114,7 @@ void AJ3DContext::LoadMaterialTable(bStream::CStream& stream) {
 }
 
 void AJ3DContext::LoadAnimation(bStream::CStream& stream, const std::string& extension) {
-	if (mModelInstance == nullptr) {
+	if (!IsModelLoaded()) {
 		return;
 	}
 
@@ -139,7 +141,7 @@ void AJ3DContext::LoadAnimation(bStream::CStream& stream, const std::string& ext
 }
 
 void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
-    if (mModelInstance.get() == nullptr) {
+    if (!IsModelLoaded()) {
         return;
     }
 
@@ -158,37 +160,57 @@ void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
 	J3D::Rendering::RenderPacketVector sortedPackets = J3D::Rendering::SortPackets({ mModelInstance }, camera.GetPosition());
 
     J3D::Rendering::Render(deltaTime, view, projection, sortedPackets);
-	J3D::Picking::RenderPickingScene(view, projection, sortedPackets);
+	//J3D::Picking::RenderPickingScene(view, projection, sortedPackets);
 }
 
 void AJ3DContext::ToggleBmt() {
+	if (!IsModelLoaded()) {
+		return;
+	}
+
 	mModelInstance->SetUseInstanceMaterialTable(!mModelInstance->GetUseInstanceMaterialTable());
 }
 
-std::vector<std::shared_ptr<J3DTexture>> AJ3DContext::GetTextures() {
-	if (mModelData == nullptr) {
-		return std::vector<std::shared_ptr<J3DTexture>>();
+std::vector<std::weak_ptr<J3DTexture>> AJ3DContext::GetTextures() {
+	if (!IsModelLoaded()) {
+		return std::vector<std::weak_ptr<J3DTexture>>();
 	}
 
-	return mModelData->GetTextures();
+	std::vector<std::weak_ptr<J3DTexture>> textures;
+	for (std::shared_ptr<J3DTexture> mat : mModelData->GetTextures()) {
+		textures.push_back(mat);
+	}
+
+	return textures;
 }
 
-std::vector<std::shared_ptr<J3DMaterial>> AJ3DContext::GetMaterials() {
-	if (mModelData == nullptr) {
-		return std::vector<std::shared_ptr<J3DMaterial>>();
+std::vector<std::weak_ptr<J3DMaterial>> AJ3DContext::GetMaterials() {
+	if (!IsModelLoaded()) {
+		return std::vector<std::weak_ptr<J3DMaterial>>();
 	}
 
-	return mModelData->GetMaterials();
+	std::vector<std::weak_ptr<J3DMaterial>> materials;
+	for (std::shared_ptr<J3DMaterial> mat : mModelData->GetMaterials()) {
+		materials.push_back(mat);
+	}
+
+	return materials;
 }
 
 void AJ3DContext::PickQuery(uint32_t x, uint32_t y) {
+	if (!IsModelLoaded()) {
+		return;
+	}
+
 	J3D::Picking::ModelMaterialIdPair p = J3D::Picking::Query(x, y);
-	std::cout << "Picked Model Id " << std::get<0>(p)  << ", mat Id " << std::get<1>(p) << ".\n";
 }
 
 void AJ3DContext::HoverQuery(glm::vec2 mousePos) {
-	std::vector<std::shared_ptr<J3DMaterial>> materials = GetMaterials();
+	if (!IsModelLoaded()) {
+		return;
+	}
 
+	shared_vector<J3DMaterial> materials = mModelData->GetMaterials();
 	for (std::shared_ptr<J3DMaterial> m : materials) {
 		if (m->IsSelected()) {
 			m->SetSelected(false);

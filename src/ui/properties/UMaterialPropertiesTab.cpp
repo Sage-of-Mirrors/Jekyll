@@ -36,7 +36,7 @@ void UMaterialPropertiesTab::Render() {
 
     const auto& materials = mMaterialData->GetMaterials();
     for (uint32_t i = 0; i < materials.size(); i++) {
-        std::shared_ptr<J3DMaterial> curMaterial = materials[i];
+        std::shared_ptr<J3DMaterial> curMaterial = materials[i].lock();
 
         if (ImGui::Selectable(curMaterial->Name.data(), mSelectedMaterial.lock() == curMaterial)) {
             mSelectedMaterial = materials[i];

@@ -50,4 +50,6 @@ public:
 
     void LoadShapeData(bStream::CStream& stream);
     void SaveShapeData(bStream::CStream& stream);
+
+    void Clear();
 };

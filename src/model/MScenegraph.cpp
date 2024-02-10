@@ -31,8 +31,7 @@ MScenegraph::MScenegraph() : mRoot(nullptr), mFlags(0), mSize(0), mData(nullptr)
 }
 
 MScenegraph::~MScenegraph() {
-    delete[] mData;
-    delete mRoot;
+    Clear();
 }
 
 size_t MScenegraph::LoadData(bStream::CStream& stream) {
@@ -134,6 +133,11 @@ void MScenegraph::SaveScenegraph(bStream::CStream& stream) {
     stream.writeUInt16(mFlags);
 
     stream.seek(curPos + mSize);
+}
+
+void MScenegraph::Clear() {
+    delete[] mData;
+    delete mRoot;
 }
 
 

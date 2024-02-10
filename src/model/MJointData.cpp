@@ -17,17 +17,7 @@ MJointData::MJointData() : mRoot(nullptr), mSize(0), mData(nullptr), mJointDataO
 }
 
 MJointData::~MJointData() {
-    for (MJoint* jnt : mJoints) {
-        delete jnt;
-    }
-
-    mJoints.clear();
-    mRoot = nullptr;
-
-    mSize = 0;
-
-    delete[] mData;
-    mData = nullptr;
+    Clear();
 }
 
 void MJointData::LoadJointData(bStream::CStream& stream, const MScenegraphNode* sceneRoot) {
@@ -120,4 +110,18 @@ void MJointData::SaveJointData(bStream::CStream& stream) {
     }
 
     stream.seek(endPos);
+}
+
+void MJointData::Clear() {
+    for (MJoint* jnt : mJoints) {
+        delete jnt;
+    }
+
+    mJoints.clear();
+    mRoot = nullptr;
+
+    mSize = 0;
+
+    delete[] mData;
+    mData = nullptr;
 }

@@ -29,8 +29,8 @@ public:
     ~AJ3DContext();
 
     J3DLight* GetLights() { return mLights; }
-    std::vector<std::shared_ptr<J3DTexture>> GetTextures();
-    std::vector<std::shared_ptr<J3DMaterial>> GetMaterials();
+    std::vector<std::weak_ptr<J3DTexture>> GetTextures();
+    std::vector<std::weak_ptr<J3DMaterial>> GetMaterials();
 
     void LoadModel(bStream::CStream& stream);
     void LoadMaterialTable(bStream::CStream& stream);
@@ -43,4 +43,8 @@ public:
     void PickQuery(uint32_t x, uint32_t y);
     void HoverQuery(glm::vec2 mousePos);
     void ResizePickingBuffer(glm::vec2 size);
+
+    bool IsModelLoaded() const { return mModelData.get() != nullptr && mModelInstance.get() != nullptr; }
+
+    void Clear() { mModelInstance = nullptr; mModelData = nullptr; }
 };

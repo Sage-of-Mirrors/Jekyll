@@ -14,15 +14,7 @@ MShapeData::MShapeData() : mSize(0), mData(nullptr), mShapeDataOffset(0) {
 }
 
 MShapeData::~MShapeData() {
-    for (MShape* shape : mShapes) {
-        delete shape;
-    }
-
-    mShapes.clear();
-    mSize = 0;
-
-    delete[] mData;
-    mData = nullptr;
+    Clear();
 }
 
 void MShapeData::LoadShapeData(bStream::CStream& stream) {
@@ -84,4 +76,16 @@ void MShapeData::SaveShapeData(bStream::CStream& stream) {
     }
 
     stream.seek(endPos);
+}
+
+void MShapeData::Clear() {
+    for (MShape* shape : mShapes) {
+        delete shape;
+    }
+
+    mShapes.clear();
+    mSize = 0;
+
+    delete[] mData;
+    mData = nullptr;
 }

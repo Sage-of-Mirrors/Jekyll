@@ -77,5 +77,6 @@ public:
     void Render(float deltaTime);
     void PostRender(float deltaTime);
 
+    void OnGLInitialized();
     void OnFileDropped(std::filesystem::path filePath);
 };
