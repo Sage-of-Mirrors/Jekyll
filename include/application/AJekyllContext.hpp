@@ -7,6 +7,8 @@
 
 #include "model/MMiscModelData.hpp"
 
+#include <glm/vec2.hpp>
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -35,6 +37,8 @@ class AJekyllContext {
 
     UViewport* mMainViewport;
     std::vector<UViewport*> mOtherViewports;
+
+    glm::vec2 mAppPosition;
     
     /* Docking */
     bool bIsDockingConfigured;
@@ -79,4 +83,6 @@ public:
 
     void OnGLInitialized();
     void OnFileDropped(std::filesystem::path filePath);
+
+    void SetAppPosition(const int xPos, const int yPos);
 };

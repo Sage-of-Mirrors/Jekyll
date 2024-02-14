@@ -36,7 +36,7 @@ void SortFuncTest(J3D::Rendering::RenderPacketVector& packets) {
 	std::vector<J3DRenderPacket> xluPackets;
 
 	for (J3DRenderPacket packet : packets) {
-		if ((packet.SortKey & 0x01000000) != 0) {
+		if ((packet.SortKey & 0x00800000) != 0) {
 			opaquePackets.push_back(packet);
 		}
 		else {
@@ -69,8 +69,34 @@ void SortFuncTest(J3D::Rendering::RenderPacketVector& packets) {
 	}
 }
 
+void PacketSort(J3D::Rendering::RenderPacketVector packets) {
+	std::sort(packets.begin(), packets.end(),
+		[](const J3DRenderPacket& a, const J3DRenderPacket& b) -> bool {
+			// Sort bias
+			{
+				uint8_t sort_bias_a = static_cast<uint8_t>((a.SortKey & 0xFF000000) >> 24);
+				uint8_t sort_bias_b = static_cast<uint8_t>((b.SortKey & 0xFF000000) >> 24);
+				if (sort_bias_a != sort_bias_b) {
+					return sort_bias_a > sort_bias_b;
+				}
+			}
+
+			// Opaque or alpha test
+			{
+				uint8_t sort_alpha_a = static_cast<uint8_t>((a.SortKey & 0x800000) >> 23);
+				uint8_t sort_alpha_b = static_cast<uint8_t>((b.SortKey & 0x800000) >> 23);
+				if (sort_alpha_a != sort_alpha_b) {
+					return sort_alpha_a < sort_alpha_b;
+				}
+			}
+
+			return a.Material->Name < b.Material->Name;
+		});
+}
+
 AJ3DContext::AJ3DContext() {
 	J3D::Picking::InitFramebuffer(560, 745);
+	J3D::Rendering::SetSortFunction(SortFuncTest);
 }
 
 AJ3DContext::~AJ3DContext() {
@@ -79,13 +105,16 @@ AJ3DContext::~AJ3DContext() {
 
 void AJ3DContext::LoadModel(bStream::CStream& stream) {
 	stream.seek(0);
-	mModelInstance = nullptr;
-	mModelData = nullptr;
 
     J3DModelLoader loader;
     
-    mModelData = loader.Load(&stream, 0);
-    mModelInstance = mModelData->CreateInstance();
+    std::shared_ptr<J3DModelData> data = loader.Load(&stream, 0);
+	std::shared_ptr<AJ3DModelEntry> entry = std::make_shared<AJ3DModelEntry>();
+
+	entry->data = data;
+	entry->instance = data->CreateInstance();
+
+	mLoadedModels.push_back(entry);
 
 	mLights[1].Position = { 0.0f, 1000.0f, 1000.0f, 1.0f };
 	mLights[1].DistAtten = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -94,58 +123,74 @@ void AJ3DContext::LoadModel(bStream::CStream& stream) {
     mLights[1].Color = { 1.0f, 0.0f, 0.0f, 1.0f };
     mLights[2].Color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-	J3D::Rendering::SetSortFunction(SortFuncTest);
-
 	//mModelData->SetTexture("ZAtoon", 256, 8, (uint8_t*)toon, 0);
 	//mModelData->SetTexture("ZBtoonEX", 256, 256, (uint8_t*)toonex, 0);
 }
 
 void AJ3DContext::LoadMaterialTable(bStream::CStream& stream) {
-	if (!IsModelLoaded()) {
+	if (!HasModels() || mSelectedModel.expired()) {
 		return;
 	}
 
+	std::shared_ptr<AJ3DModelEntry> selectedLocked = mSelectedModel.lock();
 	J3DMaterialTableLoader matTblLoader;
 
-	std::shared_ptr<J3DMaterialTable> tbl = matTblLoader.Load(&stream, mModelData);
+	std::shared_ptr<J3DMaterialTable> tbl = matTblLoader.Load(&stream, selectedLocked->data);
 	tbl->SetTexture("ZBtoonEX", 256, 256, (uint8_t*)toonex, 0);
 
-	mModelInstance->SetInstanceMaterialTable(tbl);
+	selectedLocked->instance->SetInstanceMaterialTable(tbl);
 }
 
 void AJ3DContext::LoadAnimation(bStream::CStream& stream, const std::string& extension) {
-	if (!IsModelLoaded()) {
+	if (!HasModels() || mSelectedModel.expired()) {
 		return;
 	}
 
+	std::shared_ptr<J3DModelInstance> selectedLocked = mSelectedModel.lock()->instance;
 	J3DAnimation::J3DAnimationLoader anmLoader;
 
 	if (extension == ".btk") {
-		mModelInstance->SetTexMatrixAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DTexMatrixAnimationInstance>(stream));
+		selectedLocked->SetTexMatrixAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DTexMatrixAnimationInstance>(stream));
 	}
 	else if (extension == ".brk") {
-		mModelInstance->SetRegisterColorAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(stream));
+		selectedLocked->SetRegisterColorAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DColorAnimationInstance>(stream));
 	}
 	else if (extension == ".btp") {
-		mModelInstance->SetTexIndexAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DTexIndexAnimationInstance>(stream));
+		selectedLocked->SetTexIndexAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DTexIndexAnimationInstance>(stream));
 	}
 	else if (extension == ".bck") {
-		mModelInstance->SetJointAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DJointAnimationInstance>(stream));
+		selectedLocked->SetJointAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DJointAnimationInstance>(stream));
 	}
 	else if (extension == ".bca") {
-		mModelInstance->SetJointFullAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DJointFullAnimationInstance>(stream));
+		selectedLocked->SetJointFullAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DJointFullAnimationInstance>(stream));
 	}
 	else if (extension == ".bva") {
-		mModelInstance->SetVisibilityAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DVisibilityAnimationInstance>(stream));
+		selectedLocked->SetVisibilityAnimation(anmLoader.LoadAnimation<J3DAnimation::J3DVisibilityAnimationInstance>(stream));
 	}
 }
 
 void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
-    if (!IsModelLoaded()) {
+    if (!HasModels()) {
         return;
     }
 
-	mModelInstance->UpdateAnimations(deltaTime);
+	shared_vector<J3DModelInstance> instances;
+	for (std::shared_ptr<AJ3DModelEntry> e : mLoadedModels) {
+		e->instance->UpdateAnimations(deltaTime);
+
+		e->instance->SetLight(mLights[0], 0);
+		e->instance->SetLight(mLights[1], 1);
+		e->instance->SetLight(mLights[2], 2);
+
+		instances.push_back(e->instance);
+
+		for (std::shared_ptr<J3DTexture> t : e->data->GetTextures())
+		{
+			
+		}
+	}
+
+	J3D::Rendering::RenderPacketVector sortedPackets = J3D::Rendering::SortPackets(instances, camera.GetPosition());
 
     glm::mat4 projection = camera.GetProjectionMatrix();
     glm::mat4 view = camera.GetViewMatrix();
@@ -153,31 +198,30 @@ void AJ3DContext::Render(ASceneCamera& camera, float deltaTime) {
     //J3DUniformBufferObject::SetLights(mLights);
     J3DUniformBufferObject::SetProjAndViewMatrices(projection, view);
 
-	mModelInstance->SetLight(mLights[0], 0);
-	mModelInstance->SetLight(mLights[1], 1);
-	mModelInstance->SetLight(mLights[2], 2);
-
-	J3D::Rendering::RenderPacketVector sortedPackets = J3D::Rendering::SortPackets({ mModelInstance }, camera.GetPosition());
-
     J3D::Rendering::Render(deltaTime, view, projection, sortedPackets);
-	//J3D::Picking::RenderPickingScene(view, projection, sortedPackets);
+	J3D::Picking::RenderPickingScene(view, projection, sortedPackets);
+}
+
+void AJ3DContext::UpdateTextureLods(float bias) {
+
 }
 
 void AJ3DContext::ToggleBmt() {
-	if (!IsModelLoaded()) {
+	if (!HasModels() || mSelectedModel.expired()) {
 		return;
 	}
 
-	mModelInstance->SetUseInstanceMaterialTable(!mModelInstance->GetUseInstanceMaterialTable());
+	std::shared_ptr<J3DModelInstance> selectedLocked = mSelectedModel.lock()->instance;
+	selectedLocked->SetUseInstanceMaterialTable(!selectedLocked->GetUseInstanceMaterialTable());
 }
 
 std::vector<std::weak_ptr<J3DTexture>> AJ3DContext::GetTextures() {
-	if (!IsModelLoaded()) {
+	if (!HasModels() || mSelectedModel.expired()) {
 		return std::vector<std::weak_ptr<J3DTexture>>();
 	}
 
 	std::vector<std::weak_ptr<J3DTexture>> textures;
-	for (std::shared_ptr<J3DTexture> mat : mModelData->GetTextures()) {
+	for (std::shared_ptr<J3DTexture> mat : mSelectedModel.lock()->data->GetTextures()) {
 		textures.push_back(mat);
 	}
 
@@ -185,12 +229,12 @@ std::vector<std::weak_ptr<J3DTexture>> AJ3DContext::GetTextures() {
 }
 
 std::vector<std::weak_ptr<J3DMaterial>> AJ3DContext::GetMaterials() {
-	if (!IsModelLoaded()) {
+	if (!HasModels() || mSelectedModel.expired()) {
 		return std::vector<std::weak_ptr<J3DMaterial>>();
 	}
 
 	std::vector<std::weak_ptr<J3DMaterial>> materials;
-	for (std::shared_ptr<J3DMaterial> mat : mModelData->GetMaterials()) {
+	for (std::shared_ptr<J3DMaterial> mat : mSelectedModel.lock()->data->GetMaterials()) {
 		materials.push_back(mat);
 	}
 
@@ -198,22 +242,39 @@ std::vector<std::weak_ptr<J3DMaterial>> AJ3DContext::GetMaterials() {
 }
 
 void AJ3DContext::PickQuery(uint32_t x, uint32_t y) {
-	if (!IsModelLoaded()) {
+	if (!HasModels()) {
 		return;
 	}
 
 	J3D::Picking::ModelMaterialIdPair p = J3D::Picking::Query(x, y);
-}
+	uint16_t modelId = std::get<0>(p);
+	uint16_t matId = std::get<1>(p);
 
-void AJ3DContext::HoverQuery(glm::vec2 mousePos) {
-	if (!IsModelLoaded()) {
+	if (modelId == 0) {
+		mSelectedModel.reset();
 		return;
 	}
 
-	shared_vector<J3DMaterial> materials = mModelData->GetMaterials();
-	for (std::shared_ptr<J3DMaterial> m : materials) {
-		if (m->IsSelected()) {
-			m->SetSelected(false);
+	for (std::shared_ptr<AJ3DModelEntry> e : mLoadedModels) {
+		if (e->instance->GetModelId() == modelId) {
+			mSelectedModel = e;
+			break;
+		}
+	}
+}
+
+void AJ3DContext::HoverQuery(glm::vec2 mousePos) {
+	if (!HasModels()) {
+		return;
+	}
+
+	for (std::shared_ptr<AJ3DModelEntry> e : mLoadedModels) {
+		shared_vector<J3DMaterial> materials = e->data->GetMaterials();
+
+		for (std::shared_ptr<J3DMaterial> m : materials) {
+			if (m->IsSelected()) {
+				m->SetSelected(false);
+			}
 		}
 	}
 
@@ -226,10 +287,18 @@ void AJ3DContext::HoverQuery(glm::vec2 mousePos) {
 		return;
 	}
 
-	for (std::shared_ptr<J3DMaterial> m : materials) {
-		if (m->GetMaterialId() == matId) {
-			m->SetSelected(true);
-			break;
+	for (std::shared_ptr<AJ3DModelEntry> e : mLoadedModels) {
+		if (e->instance->GetModelId() != modelId) {
+			continue;
+		}
+
+		shared_vector<J3DMaterial> materials = e->data->GetMaterials();
+
+		for (std::shared_ptr<J3DMaterial> m : materials) {
+			if (m->GetMaterialId() == matId) {
+				m->SetSelected(true);
+				break;
+			}
 		}
 	}
 }

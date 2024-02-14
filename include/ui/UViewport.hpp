@@ -14,26 +14,24 @@ class UViewport {
     uint32_t mFBO;
     uint32_t mTexIds[2];
 
-    float mViewportWidth;
-    float mViewportHeight;
+    glm::vec2 mViewportPos;
+    glm::vec2 mViewportSize;
 
     bool bIsOpen;
 
     void CreateFramebuffer();
-
     void ResizeViewport();
+    void Clear();
 
 public:
-    uint32_t mViewportOriginX;
-    uint32_t mViewportOriginY;
-
     UViewport() : UViewport("Viewport") { }
     UViewport(std::string name);
     ~UViewport();
 
     bool IsOpen() const { return bIsOpen; }
 
-    glm::vec2 GetViewportSize() const { return glm::vec2(mViewportWidth, mViewportHeight); }
+    glm::vec2 GetViewportSize() const { return mViewportSize; }
+    glm::vec2 GetViewportPosition() const { return mViewportPos; }
 
     void RenderUI(float deltaTime);
     void RenderScene(AJ3DContext* ctx, float deltaTime);

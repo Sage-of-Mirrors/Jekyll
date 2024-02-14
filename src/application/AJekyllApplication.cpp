@@ -120,6 +120,10 @@ bool AJekyllApplication::Execute(float deltaTime) {
 
 	AInput::UpdateInputState();
 
+	int xPos, yPos;
+	glfwGetWindowPos(mWindow, &xPos, &yPos);
+	mContext->SetAppPosition(xPos, yPos);
+
 	// The context renders both the ImGui elements and the background elements.
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();

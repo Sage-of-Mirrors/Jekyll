@@ -117,21 +117,17 @@ void AJekyllContext::Update(float deltaTime) {
 		++it;
 	}
 
-	//if (AInput::GetMouseButton(0) && mJ3DContext != nullptr) {
-	//	glm::vec2 mPos = AInput::GetMousePosition();
-	//	mJ3DContext->PickQuery(mPos.x, mPos.y);
-	//}
+	if (mJ3DContext) {
+		glm::vec2 screenMousePos = mAppPosition + AInput::GetMousePosition();
+		glm::vec2 bufferMousePos = screenMousePos - mMainViewport->GetViewportPosition();
+		bufferMousePos.y = mMainViewport->GetViewportSize().y - bufferMousePos.y;
 
-	if (mJ3DContext->IsModelLoaded()) {
-		//glm::vec2 vOrig = glm::vec2(mMainViewport->mViewportOriginX, mMainViewport->mViewportOriginY);
-		//glm::vec2 mPos = AInput::GetMousePosition();
+		mJ3DContext->HoverQuery(bufferMousePos);
+		if (AInput::GetMouseButton(0)) {
+			mJ3DContext->PickQuery(bufferMousePos.x, bufferMousePos.y);
+		}
 
-		//glm::vec2 qPos = mPos;
-		//qPos.y = mMainViewport->GetViewportSize().y - qPos.y;
-		//qPos += vOrig;
-
-		//mJ3DContext->HoverQuery(qPos);
-		//mJ3DContext->ResizePickingBuffer(mMainViewport->GetViewportSize());
+		mJ3DContext->ResizePickingBuffer(mMainViewport->GetViewportSize());
 	}
 }
 
@@ -145,7 +141,7 @@ void AJekyllContext::Render(float deltaTime) {
     //mScenePanel.Render(mScenegraph);
 	//mPropertiesPanel.Render();
 
-	if (mJ3DContext->IsModelLoaded()) {
+	if (mJ3DContext->HasModels()) {
 		mMainViewport->RenderUI(deltaTime);
 
 		for (UViewport* v : mOtherViewports) {
@@ -179,7 +175,7 @@ void AJekyllContext::Render(float deltaTime) {
 }
 
 void AJekyllContext::PostRender(float deltaTime) {
-	if (mJ3DContext->IsModelLoaded()) {
+	if (mJ3DContext->HasModels()) {
 		mMainViewport->RenderScene(mJ3DContext, deltaTime);
 
 		for (UViewport* v : mOtherViewports) {
@@ -210,7 +206,7 @@ void AJekyllContext::LoadModel(std::filesystem::path filePath) {
 	bStream::CFileStream fileStream = bStream::CFileStream(filePath.generic_string(), bStream::Big, bStream::In);
 
 	mJ3DContext->LoadModel(fileStream);
-	//LoadSections(fileStream);
+	LoadSections(fileStream);
 }
 
 void AJekyllContext::LoadSections(bStream::CStream& stream) {
@@ -378,6 +374,10 @@ void AJekyllContext::SaveModel(std::filesystem::path filePath) {
 	// Write watermark - might remove this later, idk
 	stream.seek(0x10);
 	stream.writeString("Made with Jekyll");
+}
+
+void AJekyllContext::SetAppPosition(const int xPos, const int yPos) {
+	mAppPosition = { xPos, yPos };
 }
 
 void AJekyllContext::OnGLInitialized() {
